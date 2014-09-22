@@ -16130,6 +16130,7 @@ void __fastcall TForm1::Malla1Click(TObject *Sender)
        center_point[2] = ImageScrollBar->Position;
 
        myMesh->set_center_point(center_point);
+       myMesh->ResetBoundingBox();
        myMesh->set_scale_x(res[0]);
        myMesh->set_scale_y(res[1]);
        myMesh->set_scale_z(res[2]);
@@ -16413,9 +16414,44 @@ void __fastcall TForm1::UCSButtonClick(TObject *Sender)
 
       UniformCubicSpline(ManualCenterLine, nL, UFCSpline,NormalesSpline);
 
-      Mesh* myMesh;
+      //myMesh = CylinderMeshing (UFCSpline, NormalesSpline, nA , r, Faces, Edges, Nodes, 2*voxLength, res[0], res[1], res[2]);
 
-      myMesh = CylinderMeshing (UFCSpline, NormalesSpline, nA , r, Faces, Edges, Nodes, 2*voxLength, res[0], res[1], res[2]);
+      //centerline initialization:
+      double** center_line;
+      center_line = new double*[UFCSpline->Count];
+
+      for (int i = 0; i < UFCSpline->Count; ++i) {
+        center_line[i] = new double[3];
+      }
+
+      //Centerline tangent initialization:
+      double** normal_vector;
+      normal_vector = new double*[NormalesSpline->Count];
+
+      for (int i = 0; i < NormalesSpline->Count; ++i) {
+        normal_vector[i] = new double[3];
+      }
+
+      PuntoF* aP;
+
+      for (int i = 0; i < UFCSpline->Count; ++i) {
+        aP = (PuntoF*)UFCSpline->Items[i];
+        center_line[i][0] = aP->x;
+        center_line[i][1] = aP->y;
+        center_line[i][2] = aP->z;
+      }
+
+      for (int i = 0; i < NormalesSpline->Count; ++i) {
+        aP = (PuntoF*)NormalesSpline->Items[i];
+        normal_vector[i][0] = aP->x;
+        normal_vector[i][1] = aP->y;
+        normal_vector[i][2] = aP->z;
+      }
+
+
+      Mesh* myMesh = Mesh(center_line, UFCSpline->Count, normal_vector,  NormalesSpline->Count,
+                    nA, r, 2*voxLength, res[0], res[1], res[2]);
+
       myMesh->set_max_intensity_thresh(meanC+2.5*stdC);
       myMesh->set_min_intensity_thresh(meanC-2.5*stdC);
       myMesh->set_max_length(2.0*myMesh->ComputeMeanEdgeDistance());

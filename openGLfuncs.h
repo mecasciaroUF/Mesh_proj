@@ -2729,39 +2729,6 @@ void drawMesh(TList* FaceList, float* color)
       }
     }
 
-    //Draw Bounding Box
-    glBegin(GL_LINE_STRIP);
-    glVertex3f( bbox_ll[1], bbox_ll[0], bbox_ll[2]);
-    glVertex3f( bbox_ll[1], bbox_ll[0], bbox_ur[2]);
-
-    glVertex3f( bbox_ll[1], bbox_ur[0], bbox_ll[2]);
-    glVertex3f( bbox_ll[1], bbox_ur[0], bbox_ur[2]);
-
-    glVertex3f( bbox_ur[1], bbox_ur[0], bbox_ll[2]);
-    glVertex3f( bbox_ur[1], bbox_ur[0], bbox_ur[2]);
-
-    glVertex3f( bbox_ur[1], bbox_ll[0], bbox_ll[2]);
-    glVertex3f( bbox_ur[1], bbox_ll[0], bbox_ur[2]);
-
-    //Cara inferior:
-    glBegin(GL_LINE_STRIP);
-    glColor3f(  color[0]*0.5, color[1]*0.5, color[2]*0.5);
-    glVertex3f( bbox_ll[1], bbox_ll[0], bbox_ll[2]);
-    glVertex3f( bbox_ll[1], bbox_ur[0], bbox_ll[2]);
-    glVertex3f( bbox_ur[1], bbox_ur[0], bbox_ll[2]);
-    glVertex3f( bbox_ur[1], bbox_ll[0], bbox_ll[2]);
-    glVertex3f( bbox_ll[1], bbox_ll[0], bbox_ll[2]);
-    glEnd();
-
-    glBegin(GL_LINE_STRIP);
-    glVertex3f( bbox_ll[1], bbox_ll[0], bbox_ur[2]);
-    glVertex3f( bbox_ll[1], bbox_ur[0], bbox_ur[2]);
-    glVertex3f( bbox_ur[1], bbox_ur[0], bbox_ur[2]);
-    glVertex3f( bbox_ur[1], bbox_ll[0], bbox_ur[2]);
-    glVertex3f( bbox_ll[1], bbox_ll[0], bbox_ur[2]);
-
-    glEnd();
-
     /*
 
     float cgx,cgy,cgz;
@@ -2808,6 +2775,45 @@ void drawMesh(TList* FaceList, float* color)
     glDisable(GL_LIGHT4);
     glDisable(GL_LIGHT5);
     //glDisable(GL_LIGHTING);
+
+    //Draw Bounding Box
+    glBegin(GL_LINES);
+    glVertex3f( bbox_ll[1], bbox_ll[0], bbox_ll[2]);
+    glVertex3f( bbox_ll[1], bbox_ll[0], bbox_ur[2]);
+    glEnd();
+
+    glBegin(GL_LINES);
+    glVertex3f( bbox_ll[1], bbox_ur[0], bbox_ll[2]);
+    glVertex3f( bbox_ll[1], bbox_ur[0], bbox_ur[2]);
+    glEnd();
+
+    glBegin(GL_LINES);
+    glVertex3f( bbox_ur[1], bbox_ur[0], bbox_ll[2]);
+    glVertex3f( bbox_ur[1], bbox_ur[0], bbox_ur[2]);
+    glEnd();
+
+    glBegin(GL_LINES);
+    glVertex3f( bbox_ur[1], bbox_ll[0], bbox_ll[2]);
+    glVertex3f( bbox_ur[1], bbox_ll[0], bbox_ur[2]);
+    glEnd();
+
+    //Cara inferior:
+    glBegin(GL_LINE_STRIP);
+    glColor3f(  color[0]*0.5, color[1]*0.5, color[2]*0.5);
+    glVertex3f( bbox_ll[1], bbox_ll[0], bbox_ll[2]);
+    glVertex3f( bbox_ll[1], bbox_ur[0], bbox_ll[2]);
+    glVertex3f( bbox_ur[1], bbox_ur[0], bbox_ll[2]);
+    glVertex3f( bbox_ur[1], bbox_ll[0], bbox_ll[2]);
+    glVertex3f( bbox_ll[1], bbox_ll[0], bbox_ll[2]);
+    glEnd();
+
+    glBegin(GL_LINE_STRIP);
+    glVertex3f( bbox_ll[1], bbox_ll[0], bbox_ur[2]);
+    glVertex3f( bbox_ll[1], bbox_ur[0], bbox_ur[2]);
+    glVertex3f( bbox_ur[1], bbox_ur[0], bbox_ur[2]);
+    glVertex3f( bbox_ur[1], bbox_ll[0], bbox_ur[2]);
+    glVertex3f( bbox_ll[1], bbox_ll[0], bbox_ur[2]);
+    glEnd();
 
     //Deshabilita Depth Test(z-buffer)
     glDisable(GL_DEPTH_TEST);

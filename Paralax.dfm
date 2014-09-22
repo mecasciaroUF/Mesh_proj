@@ -1,8 +1,8 @@
 object Form1: TForm1
-  Left = -9
-  Top = -9
-  Width = 1698
-  Height = 1020
+  Left = 2
+  Top = 1
+  Width = 1655
+  Height = 980
   Cursor = crAppStart
   Caption = 'Visor3D'
   Color = clBtnFace
@@ -704,8 +704,8 @@ object Form1: TForm1
     Top = 30
     Width = 538
     Height = 729
-    ActivePage = TabSheet3
-    TabIndex = 2
+    ActivePage = TabSheet1
+    TabIndex = 0
     TabOrder = 1
     object TabSheet1: TTabSheet
       Caption = 'Window/Level'

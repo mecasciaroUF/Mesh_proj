@@ -219,8 +219,8 @@ Mesh::Mesh(double** center_line, int center_count, double** normal_vector,
     n = 1.0f/sqrt(aux_normal[0]*aux_normal[0] + aux_normal[1]*aux_normal[1] +
                   aux_normal[2]*aux_normal[2]);
     normal_vector[i][0] *= n;
-    normal_vector[i][0] *= n;
-    normal_vector[i][0] *= n;
+    normal_vector[i][1] *= n;
+    normal_vector[i][2] *= n;
   }
 
   //%Parameter 't' (angle) going from 0º to 360º by a degº step:
@@ -337,9 +337,9 @@ Mesh::Mesh(double** center_line, int center_count, double** normal_vector,
         yn = circle_list[i+1][m+1][1];
         zn = circle_list[i+1][m+1][2];
 
-        circle_list[i+1][m+1][0] = circle_list[i+1][m][0];
-        circle_list[i+1][m+1][1] = circle_list[i+1][m][1];
-        circle_list[i+1][m+1][2] = circle_list[i+1][m][2];
+        circle_list[i+1][i+1][0] = circle_list[i+1][m][0];
+        circle_list[i+1][i+1][1] = circle_list[i+1][m][1];
+        circle_list[i+1][i+1][2] = circle_list[i+1][m][2];
 
         circle_list[i+1][m][0] = xn;
         circle_list[i+1][m][1] = yn;
@@ -419,7 +419,6 @@ Mesh::Mesh(double** center_line, int center_count, double** normal_vector,
     // Face(Node* nL, Node* nR, Node* nO, Edge* eD, Edge* eR, Edge* eL);
     aF = new Face(aN3, aN1, aN2);
   }
-
 
   //%5-Close aorta by meshing the ascendig and descending apertures:
   //5.1- Add two extra Nodes for the geometrical center of the first and last circle of 'c'.
