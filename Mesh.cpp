@@ -848,13 +848,6 @@ void Mesh::RefreshMesh() {
   pN->set_scale_y(scale_y_);
   pN->set_scale_z(scale_z_);
 
-  //pN->normal[1] = bound_plane_normal_1_[1];
-  //pN->normal[1] = bound_plane_normal_1_[1];
-  //bound_plane_normal_1_[2] = pN->normal[2];
-  //bound_plane_point_1_[0]  = pN->point[0];
-  //bound_plane_point_1_[1]  = pN->point[1];
-  //bound_plane_point_1_[2]  = pN->point[2];
-
   pN->set_bound_plane(bound_plane_normal_1_,true);  //true: plane 1
   pN->set_bound_plane(bound_plane_normal_2_,false); //false: plane 2
   pN->set_dot_1(bound_plane_normal_1_[0]*bound_plane_point_1_[0] +
@@ -864,10 +857,12 @@ void Mesh::RefreshMesh() {
   pN->set_dot_2(bound_plane_normal_2_[0]*bound_plane_point_2_[0] +
            bound_plane_normal_2_[1]*bound_plane_point_2_[1] +
            bound_plane_normal_2_[2]*bound_plane_point_2_[2]);
-
   pN->set_min_movement_thresh(min_movement_thresh_);
   pN->set_max_inactive_iterations(max_inactive_iterations_);
   pN->ResetTotalInactive();
+
+  pN->set_bounding_box(bounding_box_[1],true);
+  pN->set_bounding_box(bounding_box_[0],false);
 }
 //------------------------------------------------------------------------------
 
@@ -875,6 +870,19 @@ double Mesh::ComputeActivity() {
   Node* pN;
   pN = (Node*)node_list_->First();
   return 1.0 - double(pN->get_total_inactive()) / double(node_list_->Count);
+}
+
+//------------------------------------------------------------------------------
+
+void Mesh::ComputeBoundingBox() {
+  set_bounding_box( ((Node*)node_list_->Items[0])->bounding_box_[1],  true);
+  set_bounding_box( ((Node*)node_list_->Items[0])->bounding_box_[0], false);
+}
+//------------------------------------------------------------------------------
+
+void Mesh::ResetBoundingBox() {
+  set_bounding_box( center_point_,  true);
+  set_bounding_box( center_point_, false);
 }
 //------------------------------------------------------------------------------
 

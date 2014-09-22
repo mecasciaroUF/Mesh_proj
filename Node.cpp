@@ -25,7 +25,7 @@ double Node::scale_y_ =  1.0f;
 double Node::scale_z_ =  1.0f;
 
 double Node::bound_plane_normal_1_[3] =  {0.0, 0.0, 1.0};
-double Node::bound_plane_normal_2_[3] =  {0.0, 0.0, 1.0};
+double Node::bound_plane_normal_2_[3] =  {0.0, 0.0, -1.0};
 double Node::dot_1_     =  1.0f;
 double Node::dot_2_     =  1.0f;
 
@@ -35,7 +35,7 @@ double Node::min_movement_thresh_ =  1.0f;
 short int Node::max_inactive_iterations_ = 1.0f;
 int Node::total_inactive_ = 0;
 
-double Node::bounding_box_[2][3] = {{0.0,0.0,0.0},{0.0,0.0,0.0}};
+double Node::bounding_box_[2][3] = {{0, 0, 0},{512, 512, 512}};
 
 //------------------------------------------------------------------------------
 Node::Node(double x, double y, double z) {
@@ -305,7 +305,6 @@ void Node::RefreshPosition() {
   double delta_x = (next_position_[0]-position_[0]);
   double delta_y = (next_position_[1]-position_[1]);
   double delta_z = (next_position_[2]-position_[2]);
-
   double move_distance = sqrt(delta_x*delta_x + delta_y*delta_y +delta_z*delta_z);
 
   if (move_distance < min_movement_thresh_) {
@@ -316,7 +315,6 @@ void Node::RefreshPosition() {
       is_moving_ = false;
       ++total_inactive_;  //Total inactive is reset to 0 after mesh activation
     }
-
   }
   else {
     inactive_times_ = 0;
@@ -324,11 +322,18 @@ void Node::RefreshPosition() {
     //this->active = true;
   }
 
-
   if (is_moving_) {
     position_[0] = next_position_[0];
     position_[1] = next_position_[1];
     position_[2] = next_position_[2];
+
+    next_position_[0]<bounding_box_[0][0] ? bounding_box_[0][0]=next_position_[0] : false;
+    next_position_[1]<bounding_box_[0][1] ? bounding_box_[0][1]=next_position_[1] : false;
+    next_position_[2]<bounding_box_[0][2] ? bounding_box_[0][2]=next_position_[2] : false;
+
+    next_position_[0]>bounding_box_[1][0] ? bounding_box_[1][0]=next_position_[0] : false;
+    next_position_[1]>bounding_box_[1][1] ? bounding_box_[1][1]=next_position_[1] : false;
+    next_position_[2]>bounding_box_[1][2] ? bounding_box_[1][2]=next_position_[2] : false;
   }
 }
 
@@ -394,7 +399,7 @@ bool Node::OffLimits() {
       lambdaPi = (dot_1_ - xin)/vn;
     }
 
-    if(fabs(lambdaPi) < 1.0)
+    if(fabs(lambdaPi) < 1.0f)
       offLimit1 = true;
 
     //repeat for second bounding plane:
@@ -402,14 +407,14 @@ bool Node::OffLimits() {
     vn  = v[0]*bound_plane_normal_2_[0]   +   v[1]*bound_plane_normal_2_[1] +   v[2]*bound_plane_normal_2_[2];
 
     //if perpendicular to bounding plane, it is on limit for this plane:
-    if (vn==0) {
+    if (!vn) {
       offLimit2 = false;
-      lambdaPi = 2.0;
+      lambdaPi = 2.0f;
     }
     else
       lambdaPi = (dot_2_ - xin)/vn;
 
-    if (fabs(lambdaPi) < 1.0)
+    if (fabs(lambdaPi) < 1.0f)
       offLimit2 = true;
 
     if (offLimit1 || offLimit2)

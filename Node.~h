@@ -10,7 +10,6 @@ class Node {
     friend class Mesh;
     friend class Face;
     friend class Edge;
-
     static TList* node_list_; //the TList of Node pointers to all existing nodes
     int    id_;       //id of the node
     static int max_id_;
@@ -71,9 +70,9 @@ class Node {
     __inline void BalloonForce(double intensity) {
       double b = dark_background_? ball_coeff_ : -ball_coeff_;
       double n = (intensity >= min_intensity_thresh_ && intensity <= max_intensity_thresh_) ? b : -b;
-      force_[0] +=normal_[0]  * n;
-      force_[1] +=normal_[1]  * n;
-      force_[2] +=normal_[2]  * n;
+      force_[0] +=normal_[0] * n;
+      force_[1] +=normal_[1] * n;
+      force_[2] +=normal_[2] * n;
     }
 
     __inline void DissipationForce() {
@@ -100,35 +99,33 @@ class Node {
       if (node_list_)
         return node_list_;
     }
-    __inline int get_id() { return id_; };
-    __inline static int get_max_id() { return max_id_; };
-    __inline bool get_is_visited() const { return is_visited_;}
-    __inline bool get_is_active()  const { return is_active_;}
-    __inline bool get_is_interface() const { return is_interface_;}
-    __inline bool get_is_moving()  const { return is_moving_;}
-
-    __inline const double* get_position()      const { return position_; }
-    __inline const double* get_acceleration()  const { return acceleration_; }
-    __inline const double* get_velocity()      const { return velocity_; }
-    __inline const double* get_bounding_box_upper_right() const { return bounding_box_[0]; }
-    __inline const double* get_bounding_box_lower_left()  const { return bounding_box_[1]; }
-    __inline const double* get_force()         const { return force_; }
-    __inline const double* get_mass_center()   const { return mass_center_; }
-
-    __inline static double get_rest_distance()     { return rest_distance_; }
-    __inline static double get_max_intensity_thresh_() { return max_intensity_thresh_; }
-    __inline static double get_min_intensity_thresh_() { return min_intensity_thresh_; }
-    __inline static bool   get_dark_background()       { return dark_background_; }
-    __inline static double get_scale_x() { return scale_x_; }
-    __inline static double get_scale_y() { return scale_y_; }
-    __inline static double get_scale_z() { return scale_z_; }
-    __inline static double get_stretch_coeff() { return stretch_coeff_; }
-    __inline static double get_bend_coeff() { return bend_coeff_; }
-    __inline static double get_ball_coeff() { return ball_coeff_; }
-    __inline static double get_damp_coeff() { return damp_coeff_; }
-    __inline static double get_mass()       { return mass_; }
-    __inline static double get_min_movement_thresh()     { return min_movement_thresh_; }
-    __inline static short int get_max_inactive_iterations() { return max_inactive_iterations_; }
+    __inline int              get_id()                             { return id_; };
+    __inline static int       get_max_id()                         { return max_id_; };
+    __inline bool             get_is_visited()               const { return is_visited_;}
+    __inline bool             get_is_active()                const { return is_active_;}
+    __inline bool             get_is_interface()             const { return is_interface_;}
+    __inline bool             get_is_moving()                const { return is_moving_;}
+    __inline const double*    get_position()                 const { return position_; }
+    __inline const double*    get_acceleration()             const { return acceleration_; }
+    __inline const double*    get_velocity()                 const { return velocity_; }
+    __inline const double*    get_bounding_box_upper_right() const { return bounding_box_[0]; }
+    __inline const double*    get_bounding_box_lower_left()  const { return bounding_box_[1]; }
+    __inline const double*    get_force()                    const { return force_; }
+    __inline const double*    get_mass_center()              const { return mass_center_; }
+    __inline static double    get_rest_distance()                  { return rest_distance_; }
+    __inline static double    get_max_intensity_thresh_()          { return max_intensity_thresh_; }
+    __inline static double    get_min_intensity_thresh_()          { return min_intensity_thresh_; }
+    __inline static bool      get_dark_background()                { return dark_background_; }
+    __inline static double    get_scale_x()                        { return scale_x_; }
+    __inline static double    get_scale_y()                        { return scale_y_; }
+    __inline static double    get_scale_z()                        { return scale_z_; }
+    __inline static double    get_stretch_coeff()                  { return stretch_coeff_; }
+    __inline static double    get_bend_coeff()                     { return bend_coeff_; }
+    __inline static double    get_ball_coeff()                     { return ball_coeff_; }
+    __inline static double    get_damp_coeff()                     { return damp_coeff_; }
+    __inline static double    get_mass()                           { return mass_; }
+    __inline static double    get_min_movement_thresh()            { return min_movement_thresh_; }
+    __inline static short int get_max_inactive_iterations()        { return max_inactive_iterations_; }
     __inline static const double* get_bound_plane_normal(bool plane_1_2) {
       if (plane_1_2)
         return bound_plane_normal_1_;
@@ -141,19 +138,16 @@ class Node {
       else
         return dot_2_;
     }
-
     __inline static int get_total_inactive() {  return total_inactive_; }
 
     //Mutators:
     __inline static void set_node_list(TList* list) { node_list_ = list; }
-
-    __inline void set_id(int id) { id_ = id; };
-    __inline static void  set_max_id(int id) { max_id_ = id; };
-    __inline void set_is_visited(bool visited) { is_visited_ = visited; }
-    __inline bool set_is_active(bool active)   { is_active_  = active; }
-    __inline bool set_is_interface(bool interface_) { is_interface_ = interface_;}
-    __inline bool set_is_moving(bool moving)    { is_moving_ = moving;}
-
+    __inline void        set_id(int id) { id_ = id; };
+    __inline static void set_max_id(int id) { max_id_ = id; };
+    __inline void        set_is_visited(bool visited) { is_visited_ = visited; }
+    __inline void        set_is_active(bool active)   { is_active_  = active; }
+    __inline void        set_is_interface(bool interface_) { is_interface_ = interface_;}
+    __inline void        set_is_moving(bool moving)    { is_moving_ = moving;}
     __inline static void set_rest_distance(double distance) { rest_distance_ = distance; }
     __inline static void set_max_intensity_thresh(double intensity)  { max_intensity_thresh_ = intensity; }
     __inline static void set_min_intensity_thresh(double intensity)  { min_intensity_thresh_ = intensity; }
@@ -189,20 +183,17 @@ class Node {
 
     void ComputeMassCenter(void);                //calcula el centro de gravedad del Nodo y sus vecinos
     void RefreshPosition(void);          //Calcula la nueva posición
-
     __inline void ComputeAcceleration(void)
     {
       acceleration_[0] = force_[0] * inv_mass_;
       acceleration_[1] = force_[1] * inv_mass_;
       acceleration_[2] = force_[2] * inv_mass_;
     }
-
     __inline void ComputeVelocity(double dt) {
       velocity_[0] += acceleration_[0] * dt;
       velocity_[1] += acceleration_[1] * dt;
       velocity_[2] += acceleration_[2] * dt;
     }
-
     __inline void ComputeNextPosition(double dt) {
       //Requiere el cómputo previo de la nueva velocidad:
       next_position_[0] = position_[0] + velocity_[0] * dt;
@@ -223,14 +214,9 @@ class Node {
       force_[1] = .0f;
       force_[2] = .0f;
     }
-
     //Check bounding limits:
     bool OffLimits();
-
-    __inline void ResetTotalInactive() {
-      total_inactive_ = 0;
-    }   
-
+    __inline void ResetTotalInactive() { total_inactive_ = 0;}
     //Logical Operations:
     bool operator==(const Node &otherNode) const; //sobrecarga del comparador para preguntar si ¿N1==N2?
 };

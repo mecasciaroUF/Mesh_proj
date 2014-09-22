@@ -119,6 +119,20 @@ class Mesh {
         bound_plane_point_2_[2]  = point[2];
       }
     }
+
+  __inline void set_bounding_box(double* corner, bool upper_right) {
+    if (upper_right) {
+      bounding_box_[1][0] = corner[0];
+      bounding_box_[1][1] = corner[1];
+      bounding_box_[1][2] = corner[2];
+    }
+    else {
+      bounding_box_[0][0] = corner[0];
+      bounding_box_[0][1] = corner[1];
+      bounding_box_[0][2] = corner[2];
+    }
+  }
+
   __inline void set_center_point(double *point) {
       center_point_[0] = point[0];
       center_point_[1] = point[1];
@@ -147,6 +161,9 @@ class Mesh {
   __inline void set_dark_background(bool dark) { dark_background_ = dark;}
 
   float color[3];
+
+  void ComputeBoundingBox();
+  void ResetBoundingBox();
 
  private:
   int id_;            //mesh unique identifier
@@ -179,6 +196,8 @@ class Mesh {
   double bound_plane_point_1_[3];   //bounding plane point 1
   double bound_plane_normal_2_[3];  //bounding plane normal 2
   double bound_plane_point_2_[3];   //bounding plane point 2
+
+  double bounding_box_[2][3];
 
   TList* face_list_; //The list of face pointers to all related faces
   TList* edge_list_; //The list of face pointers to all related edges

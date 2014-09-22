@@ -16130,6 +16130,7 @@ void __fastcall TForm1::Malla1Click(TObject *Sender)
        center_point[2] = ImageScrollBar->Position;
 
        myMesh->set_center_point(center_point);
+       myMesh->ResetBoundingBox();
        myMesh->set_scale_x(res[0]);
        myMesh->set_scale_y(res[1]);
        myMesh->set_scale_z(res[2]);
@@ -16465,8 +16466,7 @@ void __fastcall TForm1::Button2Click(TObject *Sender)
         double nx,ny,nz;
         const double* xyz;
 
-     for(int i=0; i<Meshes->Count; i++)
-     {
+     for(int i=0; i<Meshes->Count; ++i) {
         pMesh = (Mesh*)Meshes->Items[i];
         pMesh->RefreshMesh();
 
@@ -16563,6 +16563,7 @@ void __fastcall TForm1::Button2Click(TObject *Sender)
      //if(pMesh->ComputeActivity() < activityThr )
      //  pMesh->set_is_active(false);
      //ListBox1->Items->Add( pMesh->CountActivity() );
+     pMesh->ComputeBoundingBox();
      }
 
     /* while(PointMap->Count)

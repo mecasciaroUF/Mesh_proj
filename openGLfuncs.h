@@ -2611,6 +2611,10 @@ void drawMesh(TList* FaceList, float* color)
     const double* normal;
     Face* pF;
 
+    const double* bbox_ur;
+    const double* bbox_ll;
+
+
      //Rendering Funcions*****************************
      glEnable(GL_DEPTH_TEST);
      glShadeModel(GL_SMOOTH);
@@ -2680,77 +2684,88 @@ void drawMesh(TList* FaceList, float* color)
 
     glCullFace(GL_FRONT);
 
-    for(int i=0;i<FaceList->Count; ++i)
-    {
-        pF = (Face*)FaceList->Items[i];
+    for (int i = 0; i < FaceList->Count; ++i) {
+      pF = (Face*)FaceList->Items[i];
+      pn0 = pF->get_left_node();
+      pn1 = pF->get_right_node();
+      pn2 = pF->get_opp_node();
+      normal = pF->get_normal();
 
-        pn0 = pF->get_left_node();
-        pn1 = pF->get_right_node();
-        pn2 = pF->get_opp_node();
+      if (pn0->get_is_interface() || pn1->get_is_interface() ||
+          pn2->get_is_interface())
+        continue;
 
-        normal = pF->get_normal();
+      xyz0 = pn0->get_position();
+      xyz1 = pn1->get_position();
+      xyz2 = pn2->get_position();
 
-        if(pn0->get_is_interface() || pn1->get_is_interface() || pn2->get_is_interface())
-          continue;
-
-        xyz0 = pn0->get_position();
-        xyz1 = pn1->get_position();
-        xyz2 = pn2->get_position();
-
-        //Cara interna:
-        if(true)//pF->newborn)
-            glColor3f(1.0, 1.0, 1.0); //Recien nacido: blanco
-        else
-            glColor3f(0.0, 0.0, 1.0); //Viejo: azul
-
-        if(pn0->get_is_moving() && pn1->get_is_moving() && pn2->get_is_moving() )
-        {
-            glBegin(GL_LINES);
-            glNormal3f(-normal[1], -normal[0], -normal[2]);
-            glColor3f(color[0], color[1], color[2]);
-            glVertex3f( xyz0[1], xyz0[0], xyz0[2]);
-            glVertex3f( xyz1[1], xyz1[0], xyz1[2]);
-            glColor3f(  color[0],color[1],color[2]);
-            glVertex3f( xyz2[1], xyz2[0], xyz2[2]);
-            glColor3f(color[0], color[1], color[2]);
-            glVertex3f( xyz0[1], xyz0[0], xyz0[2]);
-            glEnd();
-        }
-        else
-        {
-            glBegin(GL_LINES);
-            glNormal3f(-normal[1], -normal[0], -normal[2]);
-            glColor3f(color[0]*0.8, color[1]*0.8, color[2]*0.8);
-            glVertex3f( xyz0[1], xyz0[0], xyz0[2]);
-            glVertex3f( xyz1[1], xyz1[0], xyz1[2]);
-            glColor3f(color[0]*0.8, color[1]*0.8, color[2]*0.8);
-            glVertex3f( xyz2[1], xyz2[0], xyz2[2]);
-            glColor3f(color[0]*0.8, color[1]*0.8, color[2]*0.8);
-            glVertex3f( xyz0[1], xyz0[0], xyz0[2]);
-            glEnd();
-
-        }
-
-        //glCullFace(GL_BACK);
-        //Cara externa:
-
-        /*if(pF->newborn)
-        glColor3f(1.0, 0.0, 1.0);  //Recien nacido: violeta
-    else
-        glColor3f(1.0, 0.0, 0.0);  //Viejo: rojo
-
-    glNormal3f(pF->yn, pF->xn, pF->zn);
-    glVertex3f(pn2->xyz[1]/dy,pn2->xyz[0]/dx,pn2->xyz[2]/dz);
-    glVertex3f(pn1->xyz[1]/dy,pn1->xyz[0]/dx,pn1->xyz[2]/dz);
-    glVertex3f(pn0->xyz[1]/dy,pn0->xyz[0]/dx,pn0->xyz[2]/dz);
-
-    }    */
-
+      bbox_ur = pn0->get_bounding_box_upper_right();
+      bbox_ll = pn0->get_bounding_box_lower_left();
+      //Cara interna:
+      if (pn0->get_is_moving() && pn1->get_is_moving()
+          && pn2->get_is_moving() ) {
+        glBegin(GL_LINES);
+        glNormal3f(-normal[1], -normal[0], -normal[2]);
+        glColor3f(color[0], color[1], color[2]);
+        glVertex3f( xyz0[1], xyz0[0], xyz0[2]);
+        glVertex3f( xyz1[1], xyz1[0], xyz1[2]);
+        glColor3f(  color[0],color[1],color[2]);
+        glVertex3f( xyz2[1], xyz2[0], xyz2[2]);
+        glColor3f(color[0], color[1], color[2]);
+        glVertex3f( xyz0[1], xyz0[0], xyz0[2]);
+        glEnd();
+      }
+      else {
+        glBegin(GL_LINES);
+        glNormal3f(-normal[1], -normal[0], -normal[2]);
+        glColor3f(color[0]*0.8, color[1]*0.8, color[2]*0.8);
+        glVertex3f( xyz0[1], xyz0[0], xyz0[2]);
+        glVertex3f( xyz1[1], xyz1[0], xyz1[2]);
+        glColor3f(  color[0]*0.8,color[1]*0.8,color[2]*0.8);
+        glVertex3f( xyz2[1], xyz2[0], xyz2[2]);
+        glColor3f(color[0]*0.8, color[1]*0.8, color[2]*0.8);
+        glVertex3f( xyz0[1], xyz0[0], xyz0[2]);
+        glEnd();
+      }
     }
+
+    //Draw Bounding Box
+    glBegin(GL_LINE_STRIP);
+    glVertex3f( bbox_ll[1], bbox_ll[0], bbox_ll[2]);
+    glVertex3f( bbox_ll[1], bbox_ll[0], bbox_ur[2]);
+
+    glVertex3f( bbox_ll[1], bbox_ur[0], bbox_ll[2]);
+    glVertex3f( bbox_ll[1], bbox_ur[0], bbox_ur[2]);
+
+    glVertex3f( bbox_ur[1], bbox_ur[0], bbox_ll[2]);
+    glVertex3f( bbox_ur[1], bbox_ur[0], bbox_ur[2]);
+
+    glVertex3f( bbox_ur[1], bbox_ll[0], bbox_ll[2]);
+    glVertex3f( bbox_ur[1], bbox_ll[0], bbox_ur[2]);
+
+    //Cara inferior:
+    glBegin(GL_LINE_STRIP);
+    glColor3f(  color[0]*0.5, color[1]*0.5, color[2]*0.5);
+    glVertex3f( bbox_ll[1], bbox_ll[0], bbox_ll[2]);
+    glVertex3f( bbox_ll[1], bbox_ur[0], bbox_ll[2]);
+    glVertex3f( bbox_ur[1], bbox_ur[0], bbox_ll[2]);
+    glVertex3f( bbox_ur[1], bbox_ll[0], bbox_ll[2]);
+    glVertex3f( bbox_ll[1], bbox_ll[0], bbox_ll[2]);
+    glEnd();
+
+    glBegin(GL_LINE_STRIP);
+    glVertex3f( bbox_ll[1], bbox_ll[0], bbox_ur[2]);
+    glVertex3f( bbox_ll[1], bbox_ur[0], bbox_ur[2]);
+    glVertex3f( bbox_ur[1], bbox_ur[0], bbox_ur[2]);
+    glVertex3f( bbox_ur[1], bbox_ll[0], bbox_ur[2]);
+    glVertex3f( bbox_ll[1], bbox_ll[0], bbox_ur[2]);
+
+    glEnd();
+
+    /*
 
     float cgx,cgy,cgz;
 
-    /*
     for(int i=0;i<FaceList->Count; ++i)
     {
 

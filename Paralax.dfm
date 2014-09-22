@@ -1,8 +1,8 @@
 object Form1: TForm1
-  Left = 2
-  Top = 1
-  Width = 1655
-  Height = 980
+  Left = -9
+  Top = -9
+  Width = 1698
+  Height = 1020
   Cursor = crAppStart
   Caption = 'Visor3D'
   Color = clBtnFace
