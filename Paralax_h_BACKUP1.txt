@@ -1,0 +1,104 @@
+//---------------------------------------------------------------------------
+
+#ifndef ParalaxH
+#define ParalaxH
+//---------------------------------------------------------------------------
+#include <Classes.hpp>
+#include <Controls.hpp>
+#include <StdCtrls.hpp>
+#include <Forms.hpp>
+#include <ExtCtrls.hpp>
+#include "Matriz.h"
+#include "Vector.h"
+#include <Dialogs.hpp>
+#include <Menus.hpp>
+#include <ComCtrls.hpp>
+//---------------------------------------------------------------------------
+class TForm1 : public TForm
+{
+__published:	// IDE-managed Components
+        TMainMenu *MainMenu1;
+        TOpenDialog *OpenDialog1;
+        TMenuItem *Archivo1;
+        TMenuItem *Abrir1;
+        TPageControl *PageControl1;
+        TTabSheet *ImagenSheet;
+        TPanel *PanelPantalla;
+        TImage *Pantalla;
+        TListBox *FileListBox;
+        TScrollBar *ImageScrollBar;
+        TTabSheet *SegmentaSheet;
+        TLabel *ArchivosLabel;
+        TLabel *ImagenLabel;
+        TMenuItem *Cerrar1;
+        TMenuItem *Salir1;
+        TMenuItem *ROI1;
+        TImage *PantallaFiltros;
+        TCheckBox *ContourCheckBox;
+        TShape *ROIShape;
+        TPanel *PanelVistaXY;
+        TPanel *PanelVistaYZ;
+        TPanel *PanelVista3D;
+        TPanel *PanelVistaXZ;
+        TButton *AdquirirButton;
+        TMenuItem *Guardar1;
+        TMenuItem *Cargar1;
+        TListBox *ROIListBox;
+        TSaveDialog *SaveDialog1;
+        TMenuItem *CargarEstudio1;
+        TListBox *PointsListBox;
+        TCheckBox *ROICheckBox;
+        void __fastcall Abrir1Click(TObject *Sender);
+        void __fastcall FileListBoxClick(TObject *Sender);
+        void __fastcall ImageScrollBarChange(TObject *Sender);
+        void __fastcall Cerrar1Click(TObject *Sender);
+        void __fastcall Salir1Click(TObject *Sender);
+        void __fastcall ContourCheckBoxClick(TObject *Sender);
+        void __fastcall ROIShapeMouseDown(TObject *Sender,
+          TMouseButton Button, TShiftState Shift, int X, int Y);
+        void __fastcall ROIShapeMouseUp(TObject *Sender,
+          TMouseButton Button, TShiftState Shift, int X, int Y);
+        void __fastcall AdquirirButtonClick(TObject *Sender);
+        void __fastcall Guardar1Click(TObject *Sender);
+        void __fastcall Cargar1Click(TObject *Sender);
+        void __fastcall CargarEstudio1Click(TObject *Sender);
+        void __fastcall PantallaMouseMove(TObject *Sender,
+          TShiftState Shift, int X, int Y);
+        void __fastcall ROICheckBoxClick(TObject *Sender);
+
+private:
+	// User declarations
+
+        int xP; //Almacena coord X del punto donde se seleccionó la ROI
+        int yP; //Almacena coord Y del punto donde se selecciono la ROI
+        
+public:		// User declarations
+        __fastcall TForm1(TComponent* Owner);
+        void FiltroContornos();
+        AnsiString dir;  //Guarda directorio de las imágenes
+        AnsiString ext;  //Guarda extensión (.BMP)
+        AnsiString name; //Guarda el nombre de los archivos (no el ~numero)
+        int zeros;//Guarda la cantidad de ceros antes del primer "1"
+        AnsiString zeroString;//Array con ceros antes del numero
+        bool ImagenEnPantalla; //Indica si hay imagenes en pantalla
+
+        bool ModificaX; //Indica si la ROI se está agrandando/achicando en X
+        bool ModificaY; //Indica si la ROI se está agrandando/achicando en Y
+        bool ModificaCentro;//Indica si la ROI está siendo arrastrada.
+        bool GraficarResultados;//Indica si se deben graficar las 3 vistas en la otra solapa
+
+        Matriz* Cuadro;
+        Matriz Cuadro_trans;
+        Matriz Auxiliar;
+
+        float* PX;
+        float* PY;
+        float* PZ;
+
+        float dpx;
+        void RefreshPantallaFiltros();
+};
+//---------------------------------------------------------------------------
+extern PACKAGE TForm1 *Form1;
+//---------------------------------------------------------------------------
+#endif

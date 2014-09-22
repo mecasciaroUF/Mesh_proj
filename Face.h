@@ -1,0 +1,114 @@
+//vcl: permite la utilización de la clase TList
+#include <vcl.h>
+
+/*******************************************************************************
+Clase Face: Each Triangular (Face) is linked to 3 nodes (Node) and 3 edges (Edge)
+
+Face Nomenclature:
+
+          opNode
+            /\
+  leftEdge /  \ rightEdge
+          /    \
+leftNode /------\ rightNode
+         downEdge
+*******************************************************************************/
+
+//forward declaration of Node and Edge classes:
+//Como también se requiere la utilización de atributos de estas clases, el
+//.h de cada una está incluído en el .cpp de Face.
+class Node;
+class Edge;
+class Mesh;
+
+union xif{
+  int xi;
+  float xf;
+};
+
+class Face {
+  private:
+    friend class Mesh;
+    friend class Edge;
+    friend class Node;
+    static TList* face_list_; //The list of face pointers to all existing faces
+    int id_;
+    static int max_id_;
+    double signed_volume_;
+
+    //normal vector:
+    double normal_[3];
+    double mass_center_[3];
+    
+    //State variables:
+    bool is_active_;
+    bool is_visited_;
+    bool is_newborn_;
+
+    //Mesh linking:
+    Node* left_node_; // punteros a los nodos que componen el Face (triangular)
+    Node* right_node_; // punteros a los nodos que componen el Face (triangular)
+    Node* opp_node_; // punteros a los nodos que componen el Face (triangular)
+    Edge* left_edge_; //punteros a los edges que delimitan el Face (triangular)
+    Edge* right_edge_; //punteros a los edges que delimitan el Face (triangular)
+    Edge* down_edge_; //punteros a los edges que delimitan el Face (triangular)
+
+    //Subdivision routines:
+    Face* Bisection(Edge* bisect_edge);
+    void  Trisection(Edge* longer_edge, Edge* long_edge);
+    void  Quadsection();
+
+    //Adaptive routines:
+    short int TriangleMelting();
+    bool Flattening(Edge* edge_to_flatten);
+
+    //Adaptative Remeshing:
+    void AdaptiveMelting();
+    void AdaptiveInversion();
+    void AdaptiveSubdivision();
+
+    //Linking:
+    void ReplaceEdge(Edge* prev_edge, Edge* new_edge);
+    void ReplaceNode(Node* prev_node, Node* new_node);
+    void DownLabelling(Edge **down_edge, Edge **left_edge, Edge **right_edge,
+                       Node **left_node, Node **right_node, Node **opp_node);
+
+    __inline void set_max_id(int id) {  max_id_ = id; };
+
+    double ComputeSignedVolume();
+
+    //Others methods:
+    void Deactivate();
+    void Activate();
+
+  public:
+    //Constructor/Destructor:
+    Face();
+    //Constructor rápido: se especifican todas sus partes preexistentes
+    Face(Node* nL, Node* nR, Node* nO, Edge* eD, Edge* eR, Edge* eL);
+    //Constructor lento: no requiere que los lados ya existan
+    Face(Node* nL, Node* nR, Node* nO);
+    ~Face();
+
+    //Accesors/Mutators:
+    __inline static TList* get_face_list() { return face_list_;}; //returns the list of al existent faces
+    __inline int get_id() { return id_; };
+    __inline static int get_max_id() { return max_id_; };
+
+    __inline void set_face_list(TList* face_list) {  face_list_ = face_list; }
+
+    //computes the normal vector of the face and assigns it to nVector array
+     void ComputeNormal();
+     void ComputeMassCenter();
+
+     const Node* get_left_node()const;
+     const Node* get_right_node()const;
+     const Node* get_opp_node()const;
+
+     const Edge* get_left_edge()const;
+     const Edge* get_right_edge()const;
+     const Edge* get_down_edge()const;
+
+     const double* get_normal()const;
+};
+

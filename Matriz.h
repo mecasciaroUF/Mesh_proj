@@ -1,0 +1,153 @@
+//Procesamiento Digital de Imágenes
+//Universidad Favaloro
+//Bioing. Sebastián Graf
+
+#include <vcl.h>
+#include <math.h>
+#include "Vector.h"
+#if !defined(__MATRIZ_H)
+#define __MATRIZ_H
+
+class Matriz
+        {
+	private:
+	unsigned char* Bmp;
+
+        BITMAPFILEHEADER bmpfile;
+        BITMAPINFOHEADER bmpinfo;
+        RGBQUAD paleta[256];
+        int LUT[256];
+        int histo[1];
+        float acumulada[1];
+        
+        float espectroR[1][1];
+        float espectroI[1][1];
+        
+        int d;
+
+        void GrafSpctr();
+
+        float mascara[3][3];
+        int MAXpx;
+        int MINpx;
+        int TOTALpx;  //Cantidad de pixels en la imagen
+
+        int MAXcl;   //Rango de colores y Mediana
+        int MEDcl;
+        int MINcl;
+
+        Vector* filaR[1];
+        Vector* filaI[1];
+        Vector* FR[1];
+        Vector* FI[1];
+
+        int XG;
+        int YG; //centro de Gravedad
+
+	public:
+        int NColores;
+        int NumeroFilas;
+	int NumeroColumnas;
+        Matriz();
+        Matriz(int filas,int columnas);
+	~Matriz();
+        void SETLUT(int r1,int s1,int r2 ,int s2, int si, int sf);
+        void Igual(Matriz &v);
+        void Graficar(TImage *Image1);
+        void Graficar(TImage *Image1, int color);
+        void Graficar(TImage *Image1, int rojo, int azul, int verde, bool *C);
+        void Cargar(TImage *Image1,int filai, int coli);
+        void BarrasH(int ancho);
+        void BarrasV(int ancho);
+        void Fill(int lado);
+        void Pulso(int lado);
+        void Senoidal(int freq);
+        void CambiarI();
+        void GradienteAA();
+        void GradienteID();
+        void Iluminacion();
+        void Reduccion(int bits);
+        void SimCont(int color1, int color2);
+        void Circunf(int xo, int yo, int radio);
+        void LeerBMP(char *nombre);
+        void Negativo();
+        void Binarizacion(int C);
+        void CalcHisto();
+        void GrafHisto(TImage *Imagen);
+        void GrafAcum(TImage *Imagen);
+        void Ecualizar();
+        void Transformar();
+        void RuidoSP(int NR, int SP);
+        void SetMascara(float coefs[3][3]);
+        void AplicarMascara(float umbral);
+        void AplicarDobleMascara(float coefsH[3][3], float coefsV[3][3]);
+        void OrdenarMascara(float coefs[9]);
+
+        void PasaBajosEspacial();
+        void PasaAltosEspacial();
+
+        void PasaBajosFrecuencial(int fc);
+        void PasaAltosFrecuencial(int fc);
+        void Notch(int x1,int y1,int x2, int y2);
+
+        void PasaBajosButterFrecuencial(int fc, int n);
+        void PasaAltosButterFrecuencial(int fc, int n);
+
+        void HighBoost(float A);
+        void FiltroMediana();
+        void FiltroGaussiano();
+        void FiltroSobel();
+        void FiltroPrewitt();
+        void FiltroLaplaciano();
+        void FiltroRoberts();
+        void AndLogico(Matriz &Imagen);
+        void OrLogico(Matriz &Imagen);
+        void XorLogico(Matriz &Imagen);
+
+        void Suma(Matriz &Imagen);
+        void Resta(Matriz &Imagen);
+        void Promedio(Matriz &Imagen);
+        
+        void AmpDFVecino(float a, Matriz &Imagen);
+        void AmpDFInterpol(float a, Matriz &Imagen);
+        void Rotar(float eje, float angulo, Matriz &Imagen);
+
+        void FiltrarHisto();
+        void Isodata();
+
+        void FFT2D();
+        void IFFT2D();
+
+        void DetectarPuntos();
+        void DetectarLineaH();
+        void DetectarLineaV();
+        void DetectarLinea45();
+        void DetectarLinea_45();
+
+        int SquareTracing(int N, int xo, int yo, int d0, Matriz &Aux);
+
+        void Limpiar(int color);
+
+        int CentroG();  //devuelve la distancia del centro G al borde de la foto
+
+        int GetXG();
+        int GetYG();
+
+        unsigned char Interpol(float x, float y);
+        int GetMAXcl();
+        int GetMINcl();
+        int GetMEDcl();
+
+        void BrilloContraste(int brillo, int contraste);
+        void RangoDinamico(int c);
+        unsigned char& buffer(  int filas, int columnas){
+                static unsigned char nada = 0;
+		long jj = long(columnas)+long(filas)*long(NumeroColumnas);
+		if( filas >= 0 && columnas >= 0)
+			return Bmp[jj];
+		else
+			return nada;
+		}
+
+        };
+#endif

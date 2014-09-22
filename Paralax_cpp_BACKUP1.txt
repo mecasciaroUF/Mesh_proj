@@ -1,0 +1,388 @@
+//---------------------------------------------------------------------------
+
+#include <vcl.h>
+#pragma hdrstop
+#include "Matriz.h"
+#include "Vector.h"
+#include "Paralax.h"
+
+//---------------------------------------------------------------------------
+#pragma package(smart_init)
+#pragma resource "*.dfm"
+
+typedef struct {
+  TLogPalette lpal;
+  TPaletteEntry dummy[256];
+} LogPal;
+
+TForm1 *Form1;
+
+//---------------------------------------------------------------------------
+__fastcall TForm1::TForm1(TComponent* Owner)
+        : TForm(Owner)
+{
+     dir="";
+     ext=".bmp";
+    // Icon->LoadFromFile("GSX.ico");
+     ImagenEnPantalla = false;
+     ImageScrollBar->Enabled=false;
+     Pantalla->Visible=false;
+     ContourCheckBox->Enabled=false;
+     ROICheckBox->Enabled=false;
+}
+//---------------------------------------------------------------------------
+void TForm1::RefreshPantallaFiltros()
+{
+         PantallaFiltros->Top=ROIShape->Top;
+         PantallaFiltros->Left=ROIShape->Left;
+         PantallaFiltros->Width=ROIShape->Width;
+         PantallaFiltros->Height=ROIShape->Height;
+         FiltroContornos();
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm1::Abrir1Click(TObject *Sender)
+{
+      OpenDialog1->Filter = "Bmp files (*001.bmp)|*001.BMP";
+      AnsiString NombreArchivo;
+      char c='a';
+
+if (OpenDialog1->Execute())
+        {
+        Pantalla->Visible = true;
+        ImageScrollBar->Enabled = true;
+        ImageScrollBar->Position = 0;
+        FileListBox->Items->Clear();
+
+        //NombreArchivo: String auxiliar que almacena la ruta COMPLETA
+        //del archivo BMP: [dir][name][~][NUMERO][.][ext]
+        NombreArchivo=OpenDialog1->FileName;
+
+                //Busca el punto anterior a ext en nombre del archivo.
+                int cont2=NombreArchivo.Pos(".");
+
+                //Busca HACIA ATRAS el símbolo "\", representando el último directorio.
+                while(c!='\\')
+                {
+                c=(NombreArchivo.c_str())[cont2];
+                cont2--;
+                }
+
+                //zeros: indica la cantidad de ceros antes del primer numero.
+                zeros=NombreArchivo.Pos("1")-NombreArchivo.Pos("~")-1;
+
+                //name se encuentra entre "~" y el ultimo "\"
+                name=NombreArchivo.SubString(cont2+3,NombreArchivo.Pos("~")-cont2-3);
+
+                //dir se encuentra entre el comienzo del string y "\".
+                dir=NombreArchivo.SubString(1,cont2+2);
+
+                //Crea zeroString con la cantidad zeros de caracteres "0".
+                zeroString="";
+                for(int i=0;i<zeros;i++)
+                zeroString=zeroString+"0";
+
+                //i: indice para indicar el numero de la imagen;
+                int i=0;
+
+                //NextName: String que va creando progresivamente el nombre de los
+                //archivos de imagen secuenciales
+                AnsiString NextName=name+"~"+zeroString+i+ext;
+
+                //decimal: indica la decena-centena-etc. en el numero del
+                //archivo. Permite determinar la reduccion de tamaño de zeroString;
+                int decimal=10;
+
+           //El bucle busca los archivos secuenciales e ingresa su nombre en FileListBox.
+           //Termina cuando no existe el siguiente archivo.
+                while(!NextName.IsEmpty())
+                {
+                i++;
+                   //Cuando se supera la decena, se pasa a la centena (y asi
+                   //progresivamente), reduciendo un cero en zeroString
+                        if (i==decimal)
+                        {
+                        zeroString=zeroString.SubString(1,zeroString.Length()-1);
+                        decimal==decimal*10;
+                        }
+                //Busca el archivo siguiente: [dir][name][~][NUMERO+1][.][ext]
+                NextName=FileSearch(name+"~"+zeroString+i+ext,dir);
+                if(!NextName.IsEmpty())
+                FileListBox->Items->Add(NextName);
+                }
+                ImageScrollBar->Max=i-2;
+
+                ImagenEnPantalla = true;
+                ROI1->Enabled = true;
+                ContourCheckBox->Enabled=true;
+                ROICheckBox->Enabled=true;
+
+                  Pantalla->Picture->Bitmap->LoadFromFile
+      (dir+FileListBox->Items->Strings[ImageScrollBar->Position]);
+      FiltroContornos();
+        }
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm1::FileListBoxClick(TObject *Sender)
+{
+       //Cambia la imagen vista en Pantalla seleccionando el nombre en Lista
+       Pantalla->Picture->Bitmap->LoadFromFile
+       (dir+FileListBox->Items->Strings[(FileListBox->ItemIndex)]);
+       ImageScrollBar->Position=(FileListBox->ItemIndex);
+       FiltroContornos();
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm1::ImageScrollBarChange(TObject *Sender)
+{
+    //Cambia la imagen vista en Pantalla moviendo el Scrollbar
+    Pantalla->Picture->Bitmap->LoadFromFile
+    (dir+FileListBox->Items->Strings[ImageScrollBar->Position]);
+    FiltroContornos();
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm1::Cerrar1Click(TObject *Sender)
+{
+     //Borra las pantallas
+     ImagenEnPantalla = false;
+     Pantalla->Visible = false;
+     PantallaFiltros->Visible=false;
+
+     //Restaura y deshabilita ImageScrollBar
+     ImageScrollBar->Position = 0;
+     ImageScrollBar->Enabled = false;
+
+     //Limpia FileListBox
+     FileListBox->Items->Clear();
+
+     //Elimina y deshabilita ROI, deselecciona y deshabilita ContourCheckBox
+     ROI1->Enabled = false;
+     ROIShape->Visible = false;
+     ContourCheckBox->State=cbUnchecked;
+     ContourCheckBox->Enabled=false;
+     ROICheckBox->State=cbUnchecked;
+     ROICheckBox->Enabled=false;
+
+     //Restaura tamaño de PantallaFiltros.
+      PantallaFiltros->Top=0;
+      PantallaFiltros->Left=0;
+      PantallaFiltros->Width=Pantalla->Width;
+      PantallaFiltros->Height=Pantalla->Height;
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm1::Salir1Click(TObject *Sender)
+{
+        if( MessageBox(NULL, "¿Desea Salir?", "Salir",MB_YESNO|MB_ICONQUESTION) == IDNO)
+        return;
+        Close();
+}
+//---------------------------------------------------------------------------
+void  TForm1::FiltroContornos()
+{
+ if(ContourCheckBox->Checked==true)
+ {
+        Cuadro = new Matriz(PantallaFiltros->Height,PantallaFiltros->Width);
+
+        Cuadro->Cargar(Pantalla,PantallaFiltros->Top,PantallaFiltros->Left);
+        Cuadro->FiltroMediana();
+        Cuadro->Binarizacion(200);
+        Cuadro->FiltroLaplaciano();
+        Cuadro->Graficar(PantallaFiltros,1);
+
+        delete Cuadro;
+ }
+}
+//------------------------------------------------------------------------------
+void __fastcall TForm1::ContourCheckBoxClick(TObject *Sender)
+{
+         //Si se deselecciona, no muestra PantallaFiltros
+         if(ContourCheckBox->Checked==false)
+         PantallaFiltros->Visible=false;
+
+         //Si se selecciona, muestra PantallaFiltros superpuesta (Tranparent) a Pantalla
+         if(ContourCheckBox->Checked==true)
+         {
+         PantallaFiltros->Visible=true;
+         FiltroContornos();
+         }
+}
+//------------------------------------------------------------------------------
+void __fastcall TForm1::ROIShapeMouseDown(TObject *Sender,
+      TMouseButton Button, TShiftState Shift, int X, int Y)
+{
+         int y0=0;
+         int yf=ROIShape->Height;
+
+         int x0=0;
+         int xf=ROIShape->Width;
+
+          if((Y<=y0+10&&Y>=y0))
+          {
+                  ModificaY = true;
+                  SetCaptureControl(Pantalla);
+          }
+          if((X<=x0+10&&X>=x0))
+          {
+                  ModificaX = true;
+                  SetCaptureControl(Pantalla);
+          }
+          if(Y>y0+10&&Y<yf&&X>x0+10&&X<xf)
+          {
+                ModificaCentro = true;
+                xP=X;
+                yP=Y;
+                SetCaptureControl(Pantalla);
+          }
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm1::ROIShapeMouseUp(TObject *Sender,
+      TMouseButton Button, TShiftState Shift, int X, int Y)
+{
+         if(ModificaCentro == true)
+         {
+         ModificaCentro = false;
+         ROIShape->Left = X-xP;//ROIShape->Left+X-xP;
+         ROIShape->Top = Y-yP;//ROIShape->Top+Y-yP;
+         RefreshPantallaFiltros();
+         ReleaseCapture();
+         }
+
+         if(ModificaX == true)
+         {
+         ModificaX = false;
+         ROIShape->Left=X;
+         RefreshPantallaFiltros();
+         ReleaseCapture();
+         }
+
+         if(ModificaY == true)
+         {
+         ModificaY = false;
+         ROIShape->Top=Y;
+         //ROIShape->Height=ROIShape->Height-Y;
+         RefreshPantallaFiltros();
+         ReleaseCapture();
+         }
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm1::PantallaMouseMove(TObject *Sender,
+      TShiftState Shift, int X, int Y)
+{
+         if(ModificaCentro == true)
+         {
+         ROIShape->Left = X-xP;
+         ROIShape->Top = Y-yP;
+         RefreshPantallaFiltros();
+         }
+
+         if(ModificaX == true)
+         {
+         ROIShape->Width=ROIShape->Width-X+ROIShape->Left;
+         ROIShape->Left=X;
+         RefreshPantallaFiltros();
+         }
+
+         if(ModificaY == true)
+         {
+         ROIShape->Height=ROIShape->Height-Y+ROIShape->Top;
+         ROIShape->Top=Y;
+         RefreshPantallaFiltros();
+         }
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm1::AdquirirButtonClick(TObject *Sender)
+{
+        Cuadro = new Matriz(PantallaFiltros->Height,PantallaFiltros->Width);
+        ROIListBox->Items->Clear();
+
+        for(int z=1;z<FileListBox->Items->Count-1;z++)
+        {
+        Pantalla->Picture->Bitmap->LoadFromFile
+       (dir+FileListBox->Items->Strings[z]);
+
+        Cuadro->Cargar(Pantalla,PantallaFiltros->Top,PantallaFiltros->Left);
+        Cuadro->FiltroMediana();
+        Cuadro->Binarizacion(200);
+        Cuadro->FiltroLaplaciano();
+        Cuadro->Negativo();
+         for(int x=3;x<PantallaFiltros->Width-3;x++)
+                for(int y=3;y<PantallaFiltros->Height-3;y++)
+                        if(Cuadro->buffer(y,x)==0)
+                        {
+                         ROIListBox->Items->Add(AnsiString(x)+","+AnsiString(y)+","+AnsiString(z));
+                         }
+        }
+
+        delete Cuadro;
+        RefreshPantallaFiltros();
+        ROIListBox->Items->SaveToFile(dir+name+"ROIxyz.txt");
+        ROIListBox->Items->Clear();
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm1::Guardar1Click(TObject *Sender)
+{
+    if(SaveDialog1->Execute())
+    {
+      ROIListBox->Items->Add("ROI: Left/Top/Height/Width");
+      ROIListBox->Items->Add(ROIShape->Left);
+      ROIListBox->Items->Add(ROIShape->Top);
+      ROIListBox->Items->Add(ROIShape->Height);
+      ROIListBox->Items->Add(ROIShape->Width);
+      ROIListBox->Items->SaveToFile(SaveDialog1->FileName);
+    }
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm1::Cargar1Click(TObject *Sender)
+{
+    OpenDialog1->Filter = "TXT files (*.txt)|*.txt";
+      if (OpenDialog1->Execute())
+        {
+        ROIListBox->Items->LoadFromFile(OpenDialog1->FileName);
+
+                if(ROIListBox->Items->Strings[0]=="ROI: Left/Top/Height/Width")
+                {
+                ROIShape->Left = atoi(ROIListBox->Items->Strings[1].c_str());
+                ROIShape->Top = atoi(ROIListBox->Items->Strings[2].c_str());
+                ROIShape->Height = atoi(ROIListBox->Items->Strings[3].c_str());
+                ROIShape->Width = atoi(ROIListBox->Items->Strings[4].c_str());
+                ROIShape->Visible=true;
+                ROICheckBox->State=cbChecked;
+                RefreshPantallaFiltros();
+                }
+                else {MessageBox(NULL, "El archivo seleccionado no corresponde a una ROI válida", "Error",MB_OK);}
+        }
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm1::CargarEstudio1Click(TObject *Sender)
+{
+      if (OpenDialog1->Execute())
+        {
+        PointsListBox->Items->LoadFromFile(OpenDialog1->FileName);
+        GraficarResultados == true;
+        }
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm1::ROICheckBoxClick(TObject *Sender)
+{
+                if(ROICheckBox->Checked == true)
+                {
+                //Activa ROI
+                ROIShape->Visible = true;
+
+                //Modifica PantallaFiltros acorde a ROI.
+                RefreshPantallaFiltros();
+                }
+
+                if(ROICheckBox->Checked == false)
+                {
+                //Desactiva ROI
+                ROIShape->Visible = false;
+
+                //Restaura tamaño de PantallaFiltros
+                PantallaFiltros->Top=0;
+                PantallaFiltros->Left=0;
+                PantallaFiltros->Width=Pantalla->Width;
+                PantallaFiltros->Height=Pantalla->Height;
+                FiltroContornos();
+                }
+}
+//---------------------------------------------------------------------------
+

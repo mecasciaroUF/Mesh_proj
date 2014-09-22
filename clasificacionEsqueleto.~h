@@ -1,0 +1,59 @@
+void clasificacionEsqueleto(TList* Esqueleto,
+                                short int minX, short int minY, short int minZ,
+                                short int maxX, short int maxY, short int maxZ,
+                                TList* EP, TList* LP, TList* JP)
+{
+ //Input: Esqueleto y dimensiones de la caja contenedora.
+ //EP: End-Points => 1 vecino
+ //LP: Line-Points => 2 vecinos
+ //JP: Joint-Points => >2 vecinos
+
+ //Creacion de la matriz booleana que representa a los puntos de X como "1" y a los puntos
+ //no pertenecientes a X como "0":
+ bool*** M;
+
+        M= new bool** [(maxX-minX+1) + 2];          //+2: extiende las dimensiones de la
+        for (int i=0; i<(maxX-minX+1) + 2; i++)     //    máscara para evitar problemas
+        {                                           //    de contorno.
+        M[i]=new bool* [(maxY-minY+1) + 2];
+                for (int j=0; j<(maxY-minY+1) + 2; j++)
+                {
+                M[i][j]=new bool [(maxZ-minZ+1) + 2];
+                      for (int k=0; k<(maxZ-minZ+1) + 2; k++)
+                         M[i][j][k]=0;
+                }
+        }
+
+ Punto* ap; //Puntero a punto auxiliar
+
+ bool *N26;
+ N26 = new bool[26]; //array de la 26 vecindad
+
+ for(int i=0; i<Esqueleto->Count; i++)
+ {
+ ap = (Punto*)Esqueleto->Items[i];
+
+ collect26neigh(ap,M, N26);
+ int grupo = suma(N26);
+
+ if(grupo==0)
+ EP->Add(ap);
+
+ if(grupo==1)
+ EP->Add(ap);
+
+ if(grupo==2)
+ LP->Add(ap);
+
+ if(grupo>2)
+ JP->Add(ap);
+ }
+
+   for (int i=0; i<(maxX-minX+1) + 2; ++i)
+           for (int j=0; j<(maxY-minY+1)+2; ++j)
+                delete[] M[i][j];
+        for (int i=0; i<(maxX-minX+1) + 2; ++i)
+                delete[] M[i];
+        delete[] M;
+
+}

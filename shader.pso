@@ -1,0 +1,20 @@
+!!ARBfp1.0
+# cgc version 3.1.0013, build date Apr 18 2012
+# command line args: -profile arbfp1
+# source file: shader.cg
+#vendor NVIDIA Corporation
+#version 3.1.0.13
+#profile arbfp1
+#program main
+#semantic main.texture0 : TEXUNIT0
+#semantic main.texture1 : TEXUNIT1
+#var float3 IN.color : $vin.COLOR0 :  : 0 : 0
+#var float3 IN.texcoord : $vin.TEXCOORD0 : TEX0 : 0 : 1
+#var sampler3D texture0 : TEXUNIT0 : texunit 0 : 1 : 1
+#var sampler1D texture1 : TEXUNIT1 : texunit 1 : 2 : 1
+#var float4 main.color : $vout.COLOR : COL : -1 : 1
+TEMP R0;
+TEX R0.x, fragment.texcoord[0], texture[0], 3D;
+TEX result.color, R0, texture[1], 1D;
+END
+# 2 instructions, 1 R-regs

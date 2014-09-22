@@ -1,0 +1,14 @@
+struct pixel_in {
+	float3 color : COLOR0;
+	float3 texcoord : TEXCOORD0;
+};
+struct pixel_out {
+	float4 color : COLOR;
+};
+pixel_out main(pixel_in IN, uniform sampler3D texture0 : TEXUNIT0, uniform sampler1D texture1 : TEXUNIT1)
+{
+	pixel_out OUT;
+	float index = tex3D(texture0,IN.texcoord).x;
+     OUT.color= tex1D(texture1,index);
+     return OUT;
+}

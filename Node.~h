@@ -1,0 +1,237 @@
+//vcl: permite la utilización de la clase TList
+#include <vcl.h>
+
+//Forward Declaration de las clases Edge y Face:
+class Edge;
+class Face;
+
+class Node {
+  private:
+    friend class Mesh;
+    friend class Face;
+    friend class Edge;
+
+    static TList* node_list_; //the TList of Node pointers to all existing nodes
+    int    id_;       //id of the node
+    static int max_id_;
+
+    //State variables:
+    bool is_visited_;   //booleano que indica si el nodo ya fue visitado en alguna iteración
+    bool is_active_;    //we compute the node as active or inactive due to its activity during the last-n steps
+                        //if the ratio of inactive nodes to the total number of nodes increases over a certain
+                        //threshold, the model is regarded as stabilized
+    bool is_interface_; //If it is an interface Node
+    bool is_moving_;
+
+    //Movement/position parameters:
+    double position_[3];            //actual coordinates of the nodal position
+    double next_position_[3];        //future coordinates of the nodal position
+    double acceleration_[3];        //acceleration of the node
+    double velocity_[3];            //velocity of the node
+    double force_[3];               //Fuerza que actúa sobre en nodo: f = (fx,fy,fz)
+    double mass_center_[3];         //Mass center of all adjacent nodes
+    double normal_[3];               //coordenadas de la normal
+
+    //Force parameters:
+    static double rest_distance_;        //at-rest edge distance
+    static double max_intensity_thresh_; //max color to consider inside growing region
+    static double min_intensity_thresh_; //min color to consider inside growing region
+    static bool   dark_background_;      //True: dark background and bright object
+    static double scale_x_;              //x-coord scale (e.g. 0.5 mm/pixel)
+    static double scale_y_;              //y-coord scale (e.g. 0.5 mm/pixel)
+    static double scale_z_;              //z-coord scale (e.g. 0.5 mm/pixel)
+    static double stretch_coeff_;        //coeficiente que pondera el stretching force
+    static double bend_coeff_;           //coeficiente que pondera el bending force
+    static double ball_coeff_;           //coeficiente que pondera el radial force
+    static double edge_coeff_;           //coeficiente que pondera el edge force
+    static double damp_coeff_;           //node damping coefficient (viscosity)
+    static double mass_;                 //node mass
+    static double inv_mass_;                    // 1.0f/mass
+
+    //Activity parameters:
+    static double min_movement_thresh_;  //minimum node displacent to be considered "active"
+    static short int max_inactive_iterations_;//maximum iterations to wait for node to re-activate
+    static double bound_plane_normal_1_[3];  //bounding plane normal 1
+    static double bound_plane_normal_2_[3];  //bounding plane normal 2
+    static double dot_1_; //cross products between bounding plane normal and central pointx
+    static double dot_2_;
+    static double bounding_box_[2][3]; //Bounding box upper-rigth and lower left coords
+    short int inactive_times_;
+    static int total_inactive_;
+
+    //Mesh links:
+    TList* edge_list_; //The list of Edge pointers to all edges that are connected to this node
+    TList* face_list_; //The list of Face pointers that are connected to this node
+    Node*  GetOppositeNode(Edge* edge);
+    Edge*  GetOppositeEdge(Face* face);
+
+    //Other adaptive methods:
+    bool Mimic(Node* node);
+
+    __inline void BalloonForce(double intensity) {
+      double b = dark_background_? ball_coeff_ : -ball_coeff_;
+      double n = (intensity >= min_intensity_thresh_ && intensity <= max_intensity_thresh_) ? b : -b;
+      force_[0] +=normal_[0]  * n;
+      force_[1] +=normal_[1]  * n;
+      force_[2] +=normal_[2]  * n;
+    }
+
+    __inline void DissipationForce() {
+      force_[0] -= damp_coeff_ * velocity_[0];
+      force_[1] -= damp_coeff_ * velocity_[1];
+      force_[2] -= damp_coeff_ * velocity_[2];
+    }
+
+
+    __inline void EdgeForce(double fx, double fy, double fz) {
+      //TODO: edge method still not implemented
+      force_[0] += edge_coeff_ * fx;
+      force_[1] += edge_coeff_ * fy;
+      force_[2] += edge_coeff_ * fz;
+    }
+
+  public:
+    //Constructor/Destructor:
+    Node(double x, double y, double z); //Constructor por parámetros: posición del nodo
+    ~Node();        //Destructor de la clase Nodo
+
+    //Accesors:
+    __inline static TList*  get_node_list() {
+      if (node_list_)
+        return node_list_;
+    }
+    __inline int get_id() { return id_; };
+    __inline static int get_max_id() { return max_id_; };
+    __inline bool get_is_visited() const { return is_visited_;}
+    __inline bool get_is_active()  const { return is_active_;}
+    __inline bool get_is_interface() const { return is_interface_;}
+    __inline bool get_is_moving()  const { return is_moving_;}
+
+    __inline const double* get_position()      const { return position_; }
+    __inline const double* get_acceleration()  const { return acceleration_; }
+    __inline const double* get_velocity()      const { return velocity_; }
+    __inline const double* get_bounding_box_upper_right() const { return bounding_box_[0]; }
+    __inline const double* get_bounding_box_lower_left()  const { return bounding_box_[1]; }
+    __inline const double* get_force()         const { return force_; }
+    __inline const double* get_mass_center()   const { return mass_center_; }
+
+    __inline static double get_rest_distance()     { return rest_distance_; }
+    __inline static double get_max_intensity_thresh_() { return max_intensity_thresh_; }
+    __inline static double get_min_intensity_thresh_() { return min_intensity_thresh_; }
+    __inline static bool   get_dark_background()       { return dark_background_; }
+    __inline static double get_scale_x() { return scale_x_; }
+    __inline static double get_scale_y() { return scale_y_; }
+    __inline static double get_scale_z() { return scale_z_; }
+    __inline static double get_stretch_coeff() { return stretch_coeff_; }
+    __inline static double get_bend_coeff() { return bend_coeff_; }
+    __inline static double get_ball_coeff() { return ball_coeff_; }
+    __inline static double get_damp_coeff() { return damp_coeff_; }
+    __inline static double get_mass()       { return mass_; }
+    __inline static double get_min_movement_thresh()     { return min_movement_thresh_; }
+    __inline static short int get_max_inactive_iterations() { return max_inactive_iterations_; }
+    __inline static const double* get_bound_plane_normal(bool plane_1_2) {
+      if (plane_1_2)
+        return bound_plane_normal_1_;
+      else
+        return bound_plane_normal_2_;
+    }
+    __inline static double get_dot(bool plane_1_2) {
+      if (plane_1_2)
+        return dot_1_;
+      else
+        return dot_2_;
+    }
+
+    __inline static int get_total_inactive() {  return total_inactive_; }
+
+    //Mutators:
+    __inline static void set_node_list(TList* list) { node_list_ = list; }
+
+    __inline void set_id(int id) { id_ = id; };
+    __inline static void  set_max_id(int id) { max_id_ = id; };
+    __inline void set_is_visited(bool visited) { is_visited_ = visited; }
+    __inline bool set_is_active(bool active)   { is_active_  = active; }
+    __inline bool set_is_interface(bool interface_) { is_interface_ = interface_;}
+    __inline bool set_is_moving(bool moving)    { is_moving_ = moving;}
+
+    __inline static void set_rest_distance(double distance) { rest_distance_ = distance; }
+    __inline static void set_max_intensity_thresh(double intensity)  { max_intensity_thresh_ = intensity; }
+    __inline static void set_min_intensity_thresh(double intensity)  { min_intensity_thresh_ = intensity; }
+    __inline static void set_dark_background(bool dark_background)   { dark_background_ = dark_background; }
+    __inline static void set_scale_x(double scale) { scale_x_ = scale; }
+    __inline static void set_scale_y(double scale) { scale_y_ = scale; }
+    __inline static void set_scale_z(double scale) { scale_z_ = scale; }
+    __inline static void set_stretch_coeff(double coeff) { stretch_coeff_ = coeff; }
+    __inline static void set_bend_coeff(double coeff)    { bend_coeff_ = coeff; }
+    __inline static void set_ball_coeff(double coeff)    { ball_coeff_ = coeff; }
+    __inline static void set_edge_coeff(double coeff)    { edge_coeff_ = coeff; }
+    __inline static void set_damp_coeff(double coeff)    { damp_coeff_ = coeff; }
+    __inline static void set_mass(double coeff) {
+      mass_     = coeff;
+      inv_mass_ = 1.0f/mass_;
+    }
+    __inline static void set_min_movement_thresh(double distance)     { min_movement_thresh_ = distance; }
+    __inline static void set_max_inactive_iterations(short int iterations) { max_inactive_iterations_ = iterations; }
+    __inline static void set_bound_plane(double *normal, bool plane_1_2) {
+      if (plane_1_2) {
+        bound_plane_normal_1_[0] = normal[0];
+        bound_plane_normal_1_[1] = normal[1];
+        bound_plane_normal_1_[2] = normal[2];
+      }
+      else {
+        bound_plane_normal_2_[0] = normal[0];
+        bound_plane_normal_2_[1] = normal[1];
+        bound_plane_normal_2_[2] = normal[2];
+      }
+    }
+    __inline static void set_dot_1(double dot) { dot_1_ = dot; }
+    __inline static void set_dot_2(double dot) { dot_2_ = dot; }
+
+    void ComputeMassCenter(void);                //calcula el centro de gravedad del Nodo y sus vecinos
+    void RefreshPosition(void);          //Calcula la nueva posición
+
+    __inline void ComputeAcceleration(void)
+    {
+      acceleration_[0] = force_[0] * inv_mass_;
+      acceleration_[1] = force_[1] * inv_mass_;
+      acceleration_[2] = force_[2] * inv_mass_;
+    }
+
+    __inline void ComputeVelocity(double dt) {
+      velocity_[0] += acceleration_[0] * dt;
+      velocity_[1] += acceleration_[1] * dt;
+      velocity_[2] += acceleration_[2] * dt;
+    }
+
+    __inline void ComputeNextPosition(double dt) {
+      //Requiere el cómputo previo de la nueva velocidad:
+      next_position_[0] = position_[0] + velocity_[0] * dt;
+      next_position_[1] = position_[1] + velocity_[1] * dt;
+      next_position_[2] = position_[2] + velocity_[2] * dt;
+    }
+    void ComputeNormal(void);            //calcula la Normal, como promedio de las normales de todas las caras
+
+    //Calculo de las diferentes fuerzas:
+    void InternalForce();
+    void ExternalForce(double intensity, double fx, double fy, double fz);
+    void StretchingForce();
+    void BendingForce();
+
+    //Setea las fuerzas en 0:
+    __inline void ResetForce() {
+      force_[0] = .0f;
+      force_[1] = .0f;
+      force_[2] = .0f;
+    }
+
+    //Check bounding limits:
+    bool OffLimits();
+
+    __inline void ResetTotalInactive() {
+      total_inactive_ = 0;
+    }   
+
+    //Logical Operations:
+    bool operator==(const Node &otherNode) const; //sobrecarga del comparador para preguntar si ¿N1==N2?
+};
+

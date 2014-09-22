@@ -1,0 +1,264 @@
+TList* strel(int r, TList* B)
+{
+    //Crea un elemento estructurante esférico de radio Radio = r:
+    for(int j = -r; j<r+1; j++)
+     for(int i = -r; i<r+1; i++)
+           for(int k = -r; k<r+1; k++)
+           {
+                if(i*i+j*j+k*k<=r*r) //Distancia <Radio
+                {
+                    Punto* c = new Punto;
+                    c->x=i; c->y=j; c->z=k;
+                    B->Add(c);
+                }
+           }
+        return B;
+
+}
+//------------------------------------------------------------------------------
+TList* strel2(int r, TList* B)
+{
+    //Crea un elemento estructurante formado por el conjunto negado de la
+    //interseccion de dos elementos esféricos con un pixel de diferencia hacia izq:
+     for(int i = -r; i<=r; i++)
+        for(int j = -r; j<=r; j++)
+           for(int k = -r; k<=r; k++)
+                //Distancia<Radio && Distancia(+1)>Radio
+                if(i*i+j*j+k*k<=r*r && (i+1)*(i+1)+j*j+k*k>=r*r)
+                {
+                    Punto* c = new Punto;
+                    c->x=i; c->y=j; c->z=k;
+                    B->Add(c);
+                }
+
+        return B;
+}
+//------------------------------------------------------------------------------
+TList* strel3(int r, TList* B)
+{
+    //Crea un elemento estructurante formado por el conjunto negado de la
+    //interseccion de dos elementos esféricos con un pixel de diferencia hacia der:
+     for(int i = -r; i<=r; i++)
+        for(int j = -r; j<=r; j++)
+           for(int k = -r; k<=r; k++)
+                //Distancia<Radio && Distancia(+1)>Radio
+                if(i*i+j*j+k*k<=r*r && (i-1)*(i-1)+j*j+k*k>=r*r)
+                {
+                    Punto* c = new Punto;
+                    c->x=i; c->y=j; c->z=k;
+                    B->Add(c);
+                }
+
+        return B;
+}
+//------------------------------------------------------------------------------
+void strelM(int r, TList* Back, TList* Front, TList* Core, bool*** M)
+{
+    //Crea un elemento estructurante esférico de radio Radio = r:
+    //Crea una máscara M para poder dividir los elementos en 3 regiones:
+    //        Back (left-neigh = 0), Core (left y right-neigh = 1), Front (right-neigh blanco).
+
+    //Buscar Las coordenadas de todos los puntos que caen dentro de la esfera:
+    for(int j = -r; j<r+1; j++)
+     for(int i = -r; i<r+1; i++)
+      for(int k = -r; k<r+1; k++)
+        if(i*i+j*j+k*k<=r*r) //Distancia <= Radio?
+        M[i+r+1][j+r+1][k+r+1] = 1;      //Dentro de la esfera
+        else M[i+r+1][j+r+1][k+r+1] = 0; //Fuera de la esfera
+
+     //Búsqueda de puntos Front:
+     for(int j = -r; j<r+1; j++)
+      for(int i = -r; i<r+1; i++)
+       for(int k = -r; k<r+1; k++)
+        if(M[i+r+1][j+r+1][k+r+1])
+         if(!M[i+r+1 + 1][j+r+1][k+r+1])  //vecino der cae fuera de la esfera? => punto Front
+         {
+          Punto* np = new Punto;
+          np->x = i; np->y = j; np->z = k;
+          Front->Add(np);
+         }
+
+     //Búsqueda de puntos Back:
+     for(int j = -r; j<r+1; j++)
+      for(int i = -r; i<r+1; i++)
+       for(int k = -r; k<r+1; k++)
+        if(M[i+r+1][j+r+1][k+r+1])
+         if(!M[i+r-1 + 1][j+r+1][k+r+1])  //vecino izq cae fuera de la esfera? => punto Back
+         {
+          Punto* np = new Punto;
+          np->x = i; np->y = j; np->z = k;
+          Back->Add(np);
+         }
+
+     //Búsqueda de puntos Core:
+     for(int j = -r; j<r+1; j++)
+      for(int i = -r+1; i<r; i++)
+       for(int k = -r; k<r+1; k++)
+        if(M[i+r+1][j+r+1][k+r+1])
+         if(M[i+r+1 +1][j+r+1][k+r+1] && M[i+r+1 -1][j+r+1][k+r+1])//Tiene vecinos a der e izq? =>Core Point
+         {
+          Punto* np = new Punto;
+          np->x = i; np->y = j; np->z = k;
+          Core->Add(np);
+         }
+
+}
+
+//------------------------------------------------------------------------------
+void strelElipse2D(int rA, int rB, float theta, float x0, float y0, float z0, TList* B)
+{
+   //Crea un elemento estructurante elíptico plano de muestreo
+   //con radioX = rA y radioY = rB girado un ángulo theta:
+
+   //Matriz de rotación de ángulo theta para girar la elipse:
+   float R[2][2] = { {sin(theta),cos(theta)}, {cos(theta), -sin(theta)} };
+   float x,y, xR, yR;
+
+   PuntoF* c;
+
+    for(int i = -rA; i<rA+1; i++)
+        for(int j = -rB; j<rB+1; j++)
+                if( (i*i)/float(rA*rA) + (j*j)/float(rB*rB) <= 1 ) //Ecuación de la elipse:
+                {
+                c = new PuntoF;
+                x = i;
+                y = j;
+                xR = R[0][0]*x+R[0][1]*y + x0;
+                yR = R[1][0]*x+R[1][1]*y + y0;
+
+                c->x=xR; c->y=yR; c->z=z0;
+
+                B->Add(c);
+                }
+}
+//------------------------------------------------------------------------------
+
+void strelElipse2DContorno(int rA, int rB, float theta, float x0, float y0, float z0, TList* B)
+{
+   //Crea un elemento estructurante elíptico plano de muestreo
+   //con radioX = rA y radioY = rB girado un ángulo theta:
+
+   //Matriz de rotación de ángulo theta para girar la elipse:
+   float R[2][2] = { {sin(theta),cos(theta)}, {cos(theta), -sin(theta)} };
+   float x,y, xR, yR;
+
+   PuntoF* c;
+
+    for(int i = -rA; i<rA+1; i++)
+        for(int j = -rB; j<rB+1; j++)
+                if( (i*i)/float(rA*rA)+(j*j)/float(rB*rB) <= 1.0 && (i*i)/float(rA*rA)+(j*j)/float(rB*rB) >= 0.9) //Ecuación de la elipse:
+                {
+                c = new PuntoF;
+                x = i;
+                y = j;
+                xR = R[0][0]*x+R[0][1]*y + x0;
+                yR = R[1][0]*x+R[1][1]*y + y0;
+
+                c->x=xR; c->y=yR; c->z=z0;
+
+                B->Add(c);
+                }
+}
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+void strelCirc2D(int r, float x0, float y0, float z0, TList* B)
+{
+   //Crea un elemento estructurante circular plano de muestreo
+   //con radio= r:
+
+   float x,y;
+
+   PuntoF* c;
+
+    for(int i = -r; i<r+1; i++)
+        for(int j = -r; j<r+1; j++)
+                if( (i*i)+ (j*j) <= r*r ) //Ecuación de la circ rellena
+                {
+                c = new PuntoF;
+                x = float(i)+x0;
+                y = float(j)+y0;
+                c->x=x; c->y=y; c->z=z0;
+
+                B->Add(c);
+                }
+}
+//------------------------------------------------------------------------------
+
+void strelCirc2DContorno(int r, float x0, float y0, float z0, TList* B)
+{
+   //Crea un elemento estructurante circular plano de muestreo
+   //con radio = r:
+
+   float x,y;
+
+   PuntoF* c;
+
+    for(int i = -r; i<r+1; i++)
+        for(int j = -r; j<r+1; j++)
+                if( (i*i)+(j*j) <= r*r && (i*i)+(j*j) >= float(r*r)*0.75) //Ecuación del perimetro de la circ, aproximado
+                {
+                c = new PuntoF;
+                x = i;
+                y = j;
+
+                x = float(i)+x0;
+                y = float(j)+y0;
+
+                c->x=x; c->y=y; c->z=z0;
+
+                B->Add(c);
+                }
+}
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+
+void strel2D(int r,  TList* Mascara)
+{
+    for(int j = -r; j<r+1; j++)
+     for(int i = -r; i<r+1; i++)
+       if(i*i+j*j<=r*r) //Distancia <= Radio?
+        {
+          Punto* np = new Punto;
+          np->x = i; np->y = j; np->z = 0;
+          Mascara->Add(np);
+         }
+}
+
+//------------------------------------------------------------------------------
+
+void strel2D_der(int r, TList* Der)
+{
+    //Crea un elemento estructurante formado por el conjunto negado de la
+    //interseccion de dos elementos circulares con un pixel de diferencia hacia der:
+
+      for(int i = -r; i<=r; i++)
+        for(int j = -r; j<=r; j++)
+            if(i*i+j*j<=r*r && (i+1)*(i+1)+j*j>=r*r) //Si cae dentro de la circunferencia y desplazado 1 px a la derecha cae fuera:
+                {
+                    Punto* c = new Punto;
+                    c->x=i; c->y=j; c->z=k;
+                    Der->Add(c);
+                }
+
+}
+//------------------------------------------------------------------------------
+void strel2D_izq(int r, TList* Izq)
+{
+    //Crea un elemento estructurante formado por el conjunto negado de la
+    //interseccion de dos elementos circulares con un pixel de diferencia hacia izq:
+
+      for(int i = -r; i<=r; i++)
+        for(int j = -r; j<=r; j++)
+            if(i*i+j*j<=r*r && (i-1)*(i-1)+j*j>=r*r) //Si cae dentro de la circunferencia y desplazado 1 px a la izq cae fuera:
+                {
+                    Punto* c = new Punto;
+                    c->x=i; c->y=j; c->z=k;
+                    Izq->Add(c);
+                }
+
+}
+//------------------------------------------------------------------------------
+
+

@@ -1,0 +1,37 @@
+
+//computes the normal vector of the face and assigns it to nVector array
+    __inline void ComputeNormal() {
+      normal_[0] = (right_node->xyz[1] - left_node->xyz[1]) *
+                   (opp_node_->xyz[2] - left_node_->xyz[2]) -
+                   (right_node->xyz[2] - left_node->xyz[2]) *
+                   (opp_node->xyz[1] - left_node_->xyz[1]);
+      normal_[1] = (right_node_->xyz[2] - left_node_->xyz[2]) *
+                   (opp_node_->xyz[0] - left_node_->xyz[0]) -
+                   (right_node_->xyz[0] - left_node_->xyz[0]) *
+                   (opp_node_->xyz[2] - left_node_->xyz[2]);
+      normal_[2] = (right_node_->xyz[0] - left_node_->xyz[0]) *
+                   (opp_node_->xyz[1] - left_node_->xyz[1]) -
+                   (right_node_->xyz[1] - left_node_->xyz[1]) *
+                   (opp_node_->xyz[0] - left_node_->xyz[0]);
+      float xhalf = 0.5f * (normal_[0]*normal[0] +
+                            normal_[1]*normal[1] +
+                            normal_[2]*normal[2]);
+      int i = *(int*)&x;     // store floating-point bits in integer
+      i = 0x5f3759df - (i >> 1);  // initial guess for Newton's method
+      x = *(float*)&i;       // convert new bits into float
+      x = x*(1.5f - xhalf*x*x);   // One round of Newton's method
+      normal_[0] *= x;
+      normal_[1] *= x;
+      normal_[2] *= x;
+    }
+
+    __inline void ComputeMassCenter() {
+      mass_center_[0] = (right_node_->xyz[0] + left_node_->xyz[0] +
+                         opp_node_->xyz[0]) * 0.3333;
+      mass_center_[1] = (right_node_->xyz[1] + left_node_->xyz[1] +
+                         opp_node_->xyz[1]) * 0.3333;
+      mass_center_[2] = (right_node_->xyz[2] + left_node_->xyz[2] +
+                         opp_node_->xyz[2]) * 0.3333;
+      }
+
+ 

@@ -1,0 +1,147 @@
+struct punto
+{short int x,y,z;};
+
+typedef struct punto Punto;
+
+//---------------------------------------------------------------------------
+void getAllConnected(Punto* sp, short int*** M, TList* AC, TList* CP, float mean, float StD, int x0, int xf, int y0, int yf, int z0, int zf)
+{
+//sp: Seeding Point
+//CP: Conjunto de puntos candidatos
+//AP: Conjunto acumulativo de puntos conectados al sp
+//thr: threshold
+
+//Criterio: (V(p)>thr => Imagen) (V(p)<thr => fondo)
+
+        Punto* newsp = new Punto;
+
+        CP->Clear();
+        CP->Add(sp);
+
+        for(int i=0; i<AC->Count;i++)
+        {
+        newsp = (Punto*) AC->Items[i];
+        delete newsp;
+        }
+        //AC->Clear();
+
+	if(CP->Count!=0)
+	{
+                newsp = (Punto*)CP->First();
+                AC->Add(newsp);
+                CP->Items->Delete(0);
+                M[newsp->x][newsp->y][newsp->z]=minPX;
+
+		//CP = CP + NP{newsp}
+		//-----------------------------------------------------------
+		int i,j,k;
+        	for(k=1;k>=-1;k--)
+			for(i=-1;i<=1;i++)
+				for(j=-1;j<=1;j++)
+                                        if(!(i==0 && j==0 && k==0))
+                                        {
+						if(M[newsp->x+i][newsp->y+j][newsp->z+k]<mean+2*StD && M[newsp->x+i][newsp->y+j][newsp->z+k]>mean-2*StD)
+			                	{
+                                                Punto* cp = new Punto;
+                                                CP->Add(cp);
+						M[newsp->x+i][newsp->y+j][newsp->z+k]=minPX;
+						}
+                                         }
+		//--------------------------------------------------------------
+	}
+
+}
+
+//------------------------------------------------------------------------------
+
+void getBorderPoints(short int*** M, int x0, int xf, int y0, int yf, int z0, int zf)
+{
+
+        /*
+        for(z=z0; z<=zf; z++)
+         for(y=y0; y<=yf; y++)
+           {
+             Punto* bp = new Punto;
+
+             if(M[x0][y][z]!=minPX)
+             {
+             bp->x = x0; bp->y = y; bp->z = z;
+             BAC->Add(bp);
+             }
+
+             if(M[xf][y][z]!=minPX)
+             {
+             bp->x = xf; bp->y = y; bp->z = z;
+             BAC->Add(bp);
+             }
+           }
+
+         for(x=x0; x<=xf; x++)
+          for(y=y0; y<=yf; y++)
+           {
+             Punto* bp = new Punto;
+
+             if(M[x][y][z0]!=minPX)
+             {
+             bp->x = x; bp->y = y; bp->z = z0;
+             BAC->Add(bp);
+             }
+
+             if(M[x][y][zf]!=minPX)
+             {
+             bp->x = x; bp->y = y; bp->z = zf;
+             BAC->Add(bp);
+             }
+           }
+
+         for(z=z0; z<=zf; z++)
+          for(x=x0; x<=xf; x++)
+           {
+             Punto* bp = new Punto;
+
+             if(M[x][y0][z]!=minPX)
+             {
+             bp->x = x; bp->y0 = y; bp->z = z;
+             BAC->Add(bp);
+             }
+
+             if(M[x][yf][z]!=minPX)
+             {
+             bp->x = x; bp->y = yf; bp->z = z;
+             BAC->Add(bp);
+             }
+           }
+           */
+}
+
+//------------------------------------------------------------------------------
+
+int SurfacicGroups(TList* BAC, TList* Grupos)
+{
+          Punto* p1 = new Punto;
+          p1 = (Punto*)BAC->First();
+
+          BAC->Delete(0);
+
+          int*** SubMatriz;
+
+        SubMatriz = new short int** [];
+
+        for (int i=0; i<enc1.ancho; ++i)
+        {
+        M[i]=new short int* [enc1.alto];
+
+                for (int j=0; j<enc1.alto; ++j)
+                {
+                M[i][j]=new short int [cantImagenes];
+
+                for (int k=0; k<cantImagenes; ++k)
+                        M[i][j][k]=0;
+                }
+        }
+
+
+}
+
+//------------------------------------------------------------------------------
+

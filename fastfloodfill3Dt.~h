@@ -1,0 +1,18 @@
+
+
+struct rango
+{
+bool split;
+
+int left[2];   //Can be composed by 2 subregions
+int right[2];
+
+rango rN;
+rango rS;
+rango rU;
+rango rD;
+
+};
+
+
+typedef struct rango Rango;
