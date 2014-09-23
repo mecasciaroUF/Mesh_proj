@@ -704,8 +704,8 @@ object Form1: TForm1
     Top = 30
     Width = 538
     Height = 729
-    ActivePage = TabSheet1
-    TabIndex = 0
+    ActivePage = TabSheet3
+    TabIndex = 2
     TabOrder = 1
     object TabSheet1: TTabSheet
       Caption = 'Window/Level'

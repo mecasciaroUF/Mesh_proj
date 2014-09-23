@@ -2602,7 +2602,7 @@ void drawAortaRadius(TList* CenterLine, TList* Normales, TList* Radios,
 
 }
 //-----------------------------------------------------------------------------
-void drawMesh(TList* FaceList, float* color)
+void drawMesh(TList* FaceList, float* color, const double* bbox_ur, const double* bbox_ll)
 {
     //Punteros auxiliares a nodos y caras:
     const Node *pn0;
@@ -2610,10 +2610,6 @@ void drawMesh(TList* FaceList, float* color)
     const Node *pn2;
     const double* normal;
     Face* pF;
-
-    const double* bbox_ur;
-    const double* bbox_ll;
-
 
      //Rendering Funcions*****************************
      glEnable(GL_DEPTH_TEST);
@@ -2699,8 +2695,6 @@ void drawMesh(TList* FaceList, float* color)
       xyz1 = pn1->get_position();
       xyz2 = pn2->get_position();
 
-      bbox_ur = pn0->get_bounding_box_upper_right();
-      bbox_ll = pn0->get_bounding_box_lower_left();
       //Cara interna:
       if (pn0->get_is_moving() && pn1->get_is_moving()
           && pn2->get_is_moving() ) {

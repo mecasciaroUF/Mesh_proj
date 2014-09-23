@@ -54,7 +54,10 @@ class Node {
     static double bound_plane_normal_2_[3];  //bounding plane normal 2
     static double dot_1_; //cross products between bounding plane normal and central pointx
     static double dot_2_;
-    static double bounding_box_[2][3]; //Bounding box upper-rigth and lower left coords
+
+    static double* bounding_box_upper_right_corner_;
+    static double* bounding_box_lower_left_corner_;
+
     short int inactive_times_;
     static int total_inactive_;
 
@@ -81,12 +84,18 @@ class Node {
       force_[2] -= damp_coeff_ * velocity_[2];
     }
 
-
     __inline void EdgeForce(double fx, double fy, double fz) {
       //TODO: edge method still not implemented
       force_[0] += edge_coeff_ * fx;
       force_[1] += edge_coeff_ * fy;
       force_[2] += edge_coeff_ * fz;
+    }
+
+    __inline static void set_bounding_box(double* corner, bool upper_right) {
+      if (upper_right)
+        bounding_box_upper_right_corner_ = corner;
+      else
+       bounding_box_lower_left_corner_  = corner;
     }
 
   public:
@@ -108,8 +117,6 @@ class Node {
     __inline const double*    get_position()                 const { return position_; }
     __inline const double*    get_acceleration()             const { return acceleration_; }
     __inline const double*    get_velocity()                 const { return velocity_; }
-    __inline const double*    get_bounding_box_upper_right() const { return bounding_box_[0]; }
-    __inline const double*    get_bounding_box_lower_left()  const { return bounding_box_[1]; }
     __inline const double*    get_force()                    const { return force_; }
     __inline const double*    get_mass_center()              const { return mass_center_; }
     __inline static double    get_rest_distance()                  { return rest_distance_; }
@@ -181,22 +188,8 @@ class Node {
     __inline static void set_dot_1(double dot) { dot_1_ = dot; }
     __inline static void set_dot_2(double dot) { dot_2_ = dot; }
 
-    __inline static void set_bounding_box(double* corner, bool upper_right) {
-      if (upper_right) {
-        bounding_box_[1][0] = corner[0];
-        bounding_box_[1][1] = corner[1];
-        bounding_box_[1][2] = corner[2];
-      }
-      else {
-        bounding_box_[0][0] = corner[0];
-        bounding_box_[0][1] = corner[1];
-        bounding_box_[0][2] = corner[2];
-      }
-    }
-
-
     void ComputeMassCenter(void);                //calcula el centro de gravedad del Nodo y sus vecinos
-    void RefreshPosition(void);          //Calcula la nueva posición
+    void RefreshPosition(bool refresh_bounding_box);          //Calcula la nueva posición
     __inline void ComputeAcceleration(void)
     {
       acceleration_[0] = force_[0] * inv_mass_;

@@ -35,7 +35,8 @@ double Node::min_movement_thresh_ =  1.0f;
 short int Node::max_inactive_iterations_ = 1.0f;
 int Node::total_inactive_ = 0;
 
-double Node::bounding_box_[2][3] = {{0, 0, 0},{512, 512, 512}};
+double* Node::bounding_box_upper_right_corner_ = NULL;
+double* Node::bounding_box_lower_left_corner_ = NULL;
 
 //------------------------------------------------------------------------------
 Node::Node(double x, double y, double z) {
@@ -292,7 +293,7 @@ void Node::ExternalForce(double intensity, double fx, double fy, double fz) {
 }
 //------------------------------------------------------------------------------
 
-void Node::RefreshPosition() {
+void Node::RefreshPosition(bool refresh_bounding_box) {
   //Reemplaza xyz por el nuevo xyz:
   if (OffLimits()) {
     is_interface_ = true;
@@ -326,15 +327,24 @@ void Node::RefreshPosition() {
     position_[0] = next_position_[0];
     position_[1] = next_position_[1];
     position_[2] = next_position_[2];
-
-    next_position_[0]<bounding_box_[0][0] ? bounding_box_[0][0]=next_position_[0] : false;
-    next_position_[1]<bounding_box_[0][1] ? bounding_box_[0][1]=next_position_[1] : false;
-    next_position_[2]<bounding_box_[0][2] ? bounding_box_[0][2]=next_position_[2] : false;
-
-    next_position_[0]>bounding_box_[1][0] ? bounding_box_[1][0]=next_position_[0] : false;
-    next_position_[1]>bounding_box_[1][1] ? bounding_box_[1][1]=next_position_[1] : false;
-    next_position_[2]>bounding_box_[1][2] ? bounding_box_[1][2]=next_position_[2] : false;
   }
+
+  if (refresh_bounding_box) {
+    if (position_[0] < bounding_box_lower_left_corner_[0])
+      bounding_box_lower_left_corner_[0] = position_[0];
+    if (position_[1] < bounding_box_lower_left_corner_[1])
+      bounding_box_lower_left_corner_[1] = position_[1];
+    if (position_[2] < bounding_box_lower_left_corner_[2])
+      bounding_box_lower_left_corner_[2] = position_[2];
+
+    if (position_[0] > bounding_box_upper_right_corner_[0])
+      bounding_box_upper_right_corner_[0] = position_[0];
+    if (position_[1] > bounding_box_upper_right_corner_[1])
+      bounding_box_upper_right_corner_[1] = position_[1];
+    if (position_[2] > bounding_box_upper_right_corner_[2])
+      bounding_box_upper_right_corner_[2] = position_[2];
+  }
+  
 }
 
 //------------------------------------------------------------------------------

@@ -50,13 +50,14 @@ Mesh::Mesh(TList* face_list, TList* edge_list, TList* node_list,
       ((Face*)face_list_->Items[i])->Quadsection() ;
   } while(ComputeMeanEdgeDistance() < limit_edge_length);
 
-  min_length_ = 0.25*limit_edge_length;
-  max_length_ =  2.0*limit_edge_length;
-  euler_number_ =  node_list_->Count + face_list_->Count - edge_list_->Count;
+  min_length_   = 0.25f*limit_edge_length;
+  max_length_   = 2.0f*limit_edge_length;
+  euler_number_ = node_list_->Count + face_list_->Count - edge_list_->Count;
 
   set_rest_distance(ComputeMeanEdgeDistance());
 
   ComputeFaceNormals();
+  ComputeBoundingBox();
 }
 
 //------------------------------------------------------------------------------
@@ -195,12 +196,22 @@ Mesh::Mesh(double limit_edge_length, double radius, double scale_x,
   is_active_ = true;
 
   ComputeFaceNormals();
+  ComputeBoundingBox();
 }
 //---------------------------------------------------------------------------
 Mesh::Mesh(double** center_line, int center_count, double** normal_vector,
            int normal_count, int angle_count, double radius,
            double limit_edge_length, double scale_x, double scale_y,
            double scale_z) {
+  //Seteo de las condiciones iniciales:
+  stretch_coeff_   = -0.1; //coef de estiramiento: O<---->O
+  bend_coeff_      =  3.0; //Coef de curvatura: O--O--O--O--O
+  ball_coeff_      =  0.2; //coef de inflado    O->
+  edge_coeff_      =  0.0; //coeficiente de fuerza de bordes ->O<-
+  damp_coeff_      =  1.5;
+  mass_            =  3.0;
+  dark_background_ = true;
+
   //nA: pasos angulares de las circunferencias en el centerline CL
   //Auxiliary indexes:
   int i;
@@ -333,13 +344,13 @@ Mesh::Mesh(double** center_line, int center_count, double** normal_vector,
     //i need to perform i_close forward-shifts to get i_close to 0 index:
     for(k = 0; k < angle_count - i_close; ++k) {
       for(m = angle_count - 1; m > 0; m--) {
-        xn = circle_list[i+1][m+1][0];
-        yn = circle_list[i+1][m+1][1];
-        zn = circle_list[i+1][m+1][2];
+        xn = circle_list[i+1][m-1][0];
+        yn = circle_list[i+1][m-1][1];
+        zn = circle_list[i+1][m-1][2];
 
-        circle_list[i+1][i+1][0] = circle_list[i+1][m][0];
-        circle_list[i+1][i+1][1] = circle_list[i+1][m][1];
-        circle_list[i+1][i+1][2] = circle_list[i+1][m][2];
+        circle_list[i+1][m-1][0] = circle_list[i+1][m][0];
+        circle_list[i+1][m-1][1] = circle_list[i+1][m][1];
+        circle_list[i+1][m-1][2] = circle_list[i+1][m][2];
 
         circle_list[i+1][m][0] = xn;
         circle_list[i+1][m][1] = yn;
@@ -475,15 +486,6 @@ Mesh::Mesh(double** center_line, int center_count, double** normal_vector,
   }
   delete [] circle_list;
 
-  //Seteo de las condiciones iniciales:
-  stretch_coeff_ = -0.1; //coef de estiramiento: O<---->O
-  bend_coeff_    =  3.0; //Coef de curvatura: O--O--O--O--O
-  ball_coeff_    =  0.2; //coef de inflado    O->
-  edge_coeff_    =  0.0; //coeficiente de fuerza de bordes ->O<-
-  damp_coeff_    =  1.5;
-  mass_          =  3.0;
-  dark_background_ = true;
-
   scale_x_ = scale_x;
   scale_y_ = scale_y;
   scale_z_ = scale_z;
@@ -502,6 +504,7 @@ Mesh::Mesh(double** center_line, int center_count, double** normal_vector,
   set_rest_distance(ComputeMeanEdgeDistance());
 
   ComputeFaceNormals();
+  ComputeBoundingBox();
 }
 //---------------------------------------------------------------------------
 
@@ -860,8 +863,8 @@ void Mesh::RefreshMesh() {
   pN->set_max_inactive_iterations(max_inactive_iterations_);
   pN->ResetTotalInactive();
 
-  pN->set_bounding_box(bounding_box_[1],true);
-  pN->set_bounding_box(bounding_box_[0],false);
+  pN->set_bounding_box(bounding_box_[0],true);
+  pN->set_bounding_box(bounding_box_[1],false);
 }
 //------------------------------------------------------------------------------
 
@@ -874,14 +877,44 @@ double Mesh::ComputeActivity() {
 //------------------------------------------------------------------------------
 
 void Mesh::ComputeBoundingBox() {
-  set_bounding_box( ((Node*)node_list_->Items[0])->bounding_box_[1],  true);
-  set_bounding_box( ((Node*)node_list_->Items[0])->bounding_box_[0], false);
-}
-//------------------------------------------------------------------------------
 
-void Mesh::ResetBoundingBox() {
-  set_bounding_box( center_point_,  true);
-  set_bounding_box( center_point_, false);
+  Node* node;
+  node = (Node*)node_list_->First();
+  double min_x = node->position_[0];
+  double min_y = node->position_[1];
+  double min_z = node->position_[2];
+
+  double max_x = node->position_[0];
+  double max_y = node->position_[1];
+  double max_z = node->position_[2];
+
+  for (int i=0; i<node_list_->Count; ++i) {
+    node = (Node*)node_list_->Items[i];
+    if (node->position_[0] > max_x)
+      max_x = node->position_[0];
+    if (node->position_[1] > max_y)
+      max_y = node->position_[1];
+    if (node->position_[2] > max_z)
+      max_z = node->position_[2];
+    if (node->position_[0] < min_x)
+      min_x = node->position_[0];
+    if (node->position_[1] < min_y)
+      min_y = node->position_[1];
+    if (node->position_[2] < min_z)
+      min_z = node->position_[2];
+  }
+
+  //Upper_right:
+  bounding_box_[0][0] = max_x;
+  bounding_box_[0][1] = max_y;
+  bounding_box_[0][2] = max_z;
+  node->set_bounding_box(bounding_box_[0], true);
+
+  //Lower_left:
+  bounding_box_[1][0] = min_x;
+  bounding_box_[1][1] = min_y;
+  bounding_box_[1][2] = min_z;
+  node->set_bounding_box(bounding_box_[1], false);
 }
 //------------------------------------------------------------------------------
 
@@ -1004,7 +1037,6 @@ void Mesh::SaveMeshToFile(char* file_name) {
   fclose(fh);
 }
 //------------------------------------------------------------------------------
-
 
 void Mesh::LoadMeshFromFile(char* file_name) {
 
@@ -1176,6 +1208,8 @@ void Mesh::LoadMeshFromFile(char* file_name) {
     pF->is_active_  = active;
     pF->is_newborn_ = newborn;
   }
+
+  ComputeBoundingBox();
 
   fclose(fh);
 }

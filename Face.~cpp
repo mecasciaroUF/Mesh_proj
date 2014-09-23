@@ -623,17 +623,17 @@ double Face::ComputeSignedVolume() {
 //---------------------------------------------------------------------------
 
 void Face::Deactivate() {
-  opp_node_->active   = false;
-  left_node_->active  = false;
-  right_node_->active = false;
+  opp_node_->is_active_   = false;
+  left_node_->is_active_  = false;
+  right_node_->is_active_ = false;
   is_active_ = false;
 }
 //----------------------------------------------------------------------------
 
 void Face::Activate() {
-  opp_node_->active   = true;
-  left_node_->active  = true;
-  right_node_->active = true;
+  opp_node_->is_active_  = true;
+  left_node_->is_active_ = true;
+  right_node_->is_active_= true;
   is_active_ = true;
 }
 //----------------------------------------------------------------------------

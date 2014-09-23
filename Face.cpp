@@ -653,11 +653,6 @@ const Node* Face::get_opp_node() const {
 }
 //-----------------------------------------------------------------------------
 
-const double* Face::get_normal() const {
-  return normal_;
-}
-//-----------------------------------------------------------------------------
-
 const Edge* Face::get_left_edge() const {
   return left_edge_;
 }

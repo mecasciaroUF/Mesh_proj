@@ -1274,7 +1274,9 @@ void __fastcall TForm1::DrawObjects()
             {
                 myMesh = (Mesh*)Meshes->Items[i];
                 myMesh->RefreshMesh();
-                drawMesh(myMesh->get_face_list(), myMesh->color);
+                drawMesh(myMesh->get_face_list(), myMesh->color,
+                         myMesh->get_bounding_box_upper_right(),
+                         myMesh->get_bounding_box_lower_left());
                 //drawNodes(myMesh->getNodeList());
             }
 
@@ -16122,6 +16124,9 @@ void __fastcall TForm1::Malla1Click(TObject *Sender)
 
        myMesh = new Mesh( 4.0*voxLength, radius, res[0], res[1], res[2] );
        myMesh->MoveMesh(xP, yP, ImageScrollBar->Position);
+
+       myMesh->ComputeBoundingBox();
+
        myMesh->set_min_intensity_thresh(meanC-1.5*stdC);
        myMesh->set_max_intensity_thresh(meanC+1.5*stdC);
 
@@ -16130,7 +16135,7 @@ void __fastcall TForm1::Malla1Click(TObject *Sender)
        center_point[2] = ImageScrollBar->Position;
 
        myMesh->set_center_point(center_point);
-       myMesh->ResetBoundingBox();
+
        myMesh->set_scale_x(res[0]);
        myMesh->set_scale_y(res[1]);
        myMesh->set_scale_z(res[2]);
@@ -16337,7 +16342,7 @@ void __fastcall TForm1::Button1Click(TObject *Sender)
     for(int i=0; i<Nodes->Count; i++)
     {
         pN = (Node*)Nodes->Items[i];
-        pN->RefreshPosition();
+        pN->RefreshPosition(true);
     }
 
     IdleLoop(this, 0);   //  */
@@ -16454,14 +16459,11 @@ void __fastcall TForm1::UCSButtonClick(TObject *Sender)
 
       myMesh->set_max_intensity_thresh(meanC+2.5*stdC);
       myMesh->set_min_intensity_thresh(meanC-2.5*stdC);
+      myMesh->set_rest_distance(0.0);
       myMesh->set_max_length(2.0*myMesh->ComputeMeanEdgeDistance());
       myMesh->set_min_length(0.5*myMesh->ComputeMeanEdgeDistance());
       myMesh->set_min_movement_thresh(0.0);
       myMesh->set_max_inactive_iterations(100);
-      myMesh->set_rest_distance(0.0);
-      myMesh->set_scale_x(res[0]);
-      myMesh->set_scale_y(res[1]);
-      myMesh->set_scale_z(res[2]);
 
       Nodes = myMesh->get_node_list();
       Faces = myMesh->get_face_list();
@@ -16490,6 +16492,8 @@ void __fastcall TForm1::Button2Click(TObject *Sender)
      Node* pN;
 
      Punto* pP;
+     const double* cg;
+     const double* fn;
 
      double activityThr = 0.25;
 
@@ -16535,18 +16539,19 @@ void __fastcall TForm1::Button2Click(TObject *Sender)
 
         pMesh->ComputeFaceNormals();
 
-       /* for(int i=0; i<Faces->Count; i++)
+        for(int i=0; i<Faces->Count; i++)
         {
             pF = (Face*)Faces->Items[i];
-            pF->computeCG();
-
+            pF->ComputeMassCenter();
+            cg = pF->get_mass_center();
+            fn = pF->get_normal();
             pP = new Punto;
-            pP->x = int(pF->cgx + pF->xn);
-            pP->y = int(pF->cgy + pF->yn);
-            pP->z = int(pF->cgz + pF->zn);
+            pP->x = int(cg[0] + fn[0]);
+            pP->y = int(cg[1] + fn[1]);
+            pP->z = int(cg[2] + fn[2]);
             pP->color = M->GetV(pP->x, pP->y, pP->z);
             PointMap->Add(pP);
-        } */
+        }
 
         for(int i=0; i<PointMap->Count; i++)
         {
@@ -16592,24 +16597,23 @@ void __fastcall TForm1::Button2Click(TObject *Sender)
         for(int i=0; i<Nodes->Count; i++)
         {
             pN = (Node*)Nodes->Items[i];
-            pN->RefreshPosition();
+            pN->RefreshPosition(true);
         }
 
      //if(pMesh->ComputeActivity() < activityThr )
      //  pMesh->set_is_active(false);
      //ListBox1->Items->Add( pMesh->CountActivity() );
-     pMesh->ComputeBoundingBox();
      }
 
-    /* while(PointMap->Count)
-        {
-            pP = (Punto*)PointMap->First();
-            M->SetV(pP->x,pP->y,pP->z,pP->color);
-            delete pP;
-            PointMap->Delete(0);
-            pP = NULL;
-        }
-        PointMap->Clear();  */
+     while(PointMap->Count)
+     {
+      pP = (Punto*)PointMap->First();
+      M->SetV(pP->x,pP->y,pP->z,pP->color);
+      delete pP;
+      PointMap->Delete(0);
+      pP = NULL;
+    }
+    PointMap->Clear();
 
     IdleLoop(this, 0);
 }

@@ -94,6 +94,9 @@ class Mesh {
       return bound_plane_point_2_;
   }
 
+  __inline const double* get_bounding_box_upper_right() const { return bounding_box_[0]; }
+  __inline const double* get_bounding_box_lower_left() const { return bounding_box_[1]; }
+
   //Mutators:
   __inline void set_min_length(double length) { min_length_ = length; }
   __inline void set_max_length(double length) { max_length_ = length; }
@@ -119,20 +122,6 @@ class Mesh {
         bound_plane_point_2_[2]  = point[2];
       }
     }
-
-  __inline void set_bounding_box(double* corner, bool upper_right) {
-    if (upper_right) {
-      bounding_box_[1][0] = corner[0];
-      bounding_box_[1][1] = corner[1];
-      bounding_box_[1][2] = corner[2];
-    }
-    else {
-      bounding_box_[0][0] = corner[0];
-      bounding_box_[0][1] = corner[1];
-      bounding_box_[0][2] = corner[2];
-    }
-  }
-
   __inline void set_center_point(double *point) {
       center_point_[0] = point[0];
       center_point_[1] = point[1];
@@ -160,10 +149,8 @@ class Mesh {
   __inline void set_mass(double mass) { mass_ = mass;}    //node mass
   __inline void set_dark_background(bool dark) { dark_background_ = dark;}
 
+  void  ComputeBoundingBox();
   float color[3];
-
-  void ComputeBoundingBox();
-  void ResetBoundingBox();
 
  private:
   int id_;            //mesh unique identifier

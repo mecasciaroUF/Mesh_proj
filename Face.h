@@ -94,6 +94,8 @@ class Face {
     __inline static TList* get_face_list() { return face_list_;}; //returns the list of al existent faces
     __inline int get_id() { return id_; };
     __inline static int get_max_id() { return max_id_; };
+    __inline const double* get_mass_center() const { return mass_center_; }
+    __inline const double* get_normal() const { return normal_; }
 
     __inline void set_face_list(TList* face_list) {  face_list_ = face_list; }
 
@@ -108,7 +110,5 @@ class Face {
      const Edge* get_left_edge()const;
      const Edge* get_right_edge()const;
      const Edge* get_down_edge()const;
-
-     const double* get_normal()const;
 };
 
